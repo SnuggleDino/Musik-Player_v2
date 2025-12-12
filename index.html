@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaWave Music Player</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' file: data:;">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="bg-animated">
+  
+  <div class="app-shell">
+    <div class="blur-orb blur-orb--left"></div>
+    <div class="blur-orb blur-orb--right"></div>
+
+    <header class="app-header">
+      <div class="app-title-block">
+        <div class="logo-pill">NW</div>
+        <div class="app-title-text">
+          <h1 id="app-title">NovaWave</h1>
+          <p id="app-subtitle">Lokale Musik + Downloader</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="lang-switch">
+          <button class="lang-btn lang-btn--active" data-lang="de">DE</button>
+          <span>/</span>
+          <button class="lang-btn" data-lang="en">EN</button>
+        </div>
+
+        <div class="theme-panel">
+          <span class="theme-label" id="label-theme">Theme</span>
+          <div class="theme-buttons">
+            <button class="theme-btn theme-btn--active" data-theme="blue" title="Blue"></button>
+            <button class="theme-btn" data-theme="dark" title="Dark"></button>
+            <button class="theme-btn" data-theme="light" title="Light"></button>
+          </div>
+        </div>
+
+        <button id="btn-toggle-mini" class="mini-toggle-btn" title="Mini Player">🗖</button>
+        <button id="btn-help" class="help-fab" title="Hilfe">?</button>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      
+      <section class="player-column">
+        
+        <div class="cover-art-container">
+          <div class="cover-art-wrapper">
+            <div class="cover-placeholder">
+              <span class="music-note-icon">♪</span>
+            </div>
+            <div class="cover-overlay">
+              <span class="cover-top-tag" id="cover-top-tag">Now Playing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-info-area">
+          <div class="track-title-row">
+            <span id="track-title" class="track-title-large">Kein Titel</span>
+            <button id="btn-favorite-current" class="favorite-nowplaying" title="Favorit">☆</button>
+          </div>
+          <div id="track-artist" class="track-artist-large">Bitte Ordner öffnen</div>
+        </div>
+
+        <div class="progress-area">
+          <div class="time-labels">
+            <span id="track-current-time">0:00</span>
+            <span id="track-remaining-time">-:--</span>
+          </div>
+          <div class="progress-bar" id="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <div class="controls-area">
+          <div class="control-row-main">
+            <button id="btn-shuffle" class="mode-btn" title="Shuffle">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            </button>
+            
+            <button id="btn-prev" class="control-pill" title="Zurück">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+
+            <button id="btn-play" class="control-main" title="Play/Pause">
+              <svg id="play-icon" viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="pause-icon" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+
+            <button id="btn-next" class="control-pill" title="Weiter">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+
+            <button id="btn-loop" class="mode-btn" title="Loop">
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2.1l4 4-4 4"/><path d="M3 12.2v-2a4 4 0 0 1 4-4h12.8"/><path d="M7 21.9l-4-4 4-4"/><path d="M21 11.8v2a4 4 0 0 1-4 4H4.2"/></svg>
+            </button>
+          </div>
+
+          <div class="volume-row">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="color:var(--text-muted)"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+            <div class="volume-slider" id="volume-slider">
+              <div class="volume-fill" id="volume-fill" style="width: 70%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="extras-column">
+        
+        <div class="glass-panel extras-panel">
+          <h2 id="label-extras" class="panel-title">Tools</h2>
+          
+          <div class="tool-block">
+            <div class="tool-header-row">
+               <div>
+                 <h3 id="label-visualizer-title">Visualizer</h3>
+                 <p class="status-text">Echtzeit-Audio</p>
+               </div>
+               <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-visualizer">
+                  <span class="slider round"></span>
+               </label>
+            </div>
+            <div id="visualizer-container" class="visualizer-container">
+               <canvas id="visualizer-canvas" width="300" height="80"></canvas>
+            </div>
+          </div>
+
+          <hr style="border:0; border-top:1px solid var(--border-soft); margin:15px 0; opacity:0.5;">
+
+          <div class="tool-block">
+            <h3 id="label-downloader-title" style="font-size:0.9rem; margin-bottom:5px;">Downloader</h3>
+            
+            <div class="input-group-vertical">
+              <input type="text" id="yt-url" class="extras-input" placeholder="YouTube URL..." />
+              <input type="text" id="yt-name" class="extras-input" placeholder="Dateiname (optional)..." style="margin-top: 5px;" />
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+               <div class="status-text" id="yt-status"></div>
+               <button id="btn-download-yt" class="extras-button primary-btn">Download</button>
+            </div>
+            
+            <div class="yt-progress-bar">
+               <div id="yt-progress-fill" class="yt-progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel playlist-panel">
+          <div class="playlist-header-area">
+             <div class="playlist-top-row">
+                <h2 id="label-playlist" class="panel-title" style="margin:0; border:none;">Playlist</h2>
+                <button id="btn-load-tracks" class="load-btn">Ordner öffnen</button>
+             </div>
+             
+             <div class="playlist-toolbar">
+                <input type="text" id="playlist-search" class="playlist-search-input" placeholder="Suchen..." />
+                <div class="playlist-sort-actions">
+                   <button id="btn-sort-az" class="playlist-sort-btn">AZ</button>
+                   <button id="btn-sort-original" class="playlist-sort-btn playlist-sort-btn--active">#</button>
+                </div>
+             </div>
+             
+             <div class="playlist-info-bar">
+                <span id="playlist-summary">0 Titel</span>
+             </div>
+          </div>
+
+          <div class="playlist-scroll-area" id="playlist-list">
+             <div class="empty-state">
+                Noch keine Musik.<br>
+                Klicke auf "Ordner öffnen".
+             </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+    
+    <footer class="app-footer">
+      <div id="footer-left">NovaWave • v1.0</div>
+    </footer>
+
+  </div>
+
+  <div id="help-overlay" class="help-overlay" style="display: none;">
+    <div class="help-overlay-backdrop"></div>
+    <div class="help-modal">
+      <div class="help-header">
+        <h2 id="help-title">Hilfe</h2>
+        <button id="btn-help-close" class="close-icon">&times;</button>
+      </div>
+      <div class="help-content">
+        <div class="help-grid">
+           <p><strong>Leertaste:</strong> Play/Pause</p>
+           <p><strong>Pfeile:</strong> Vor/Zurück/Lautstärke</p>
+           <p><strong>S:</strong> Shuffle</p>
+           <p><strong>L:</strong> Loop</p>
+           <p><strong>F:</strong> Favorit setzen</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

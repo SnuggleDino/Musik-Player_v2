@@ -1,0 +1,41 @@
+{
+  "name": "novawave-music-player",
+  "version": "1.0.0",
+  "description": "NovaWave – Lokale Musik + Downloader",
+  "main": "main.js",
+  "author": "SnuggleDino",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.snuggledino.novawave",
+    "productName": "NovaWave Music Player",
+    "files": [
+  "index.html",
+  "main.js",
+  "preload.js",
+  "renderer.js",
+  "style.css",
+  "package.json",
+  "downloads/**/*",
+  "assets/**/*",
+  "yt-dlp.exe"
+],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  },
+  "dependencies": {
+  "yt-dlp-wrap": "^2.3.12"
+  }
+}
