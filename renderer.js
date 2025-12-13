@@ -9,18 +9,20 @@ let basePlaylist = [];
 let currentIndex = -1;
 let isPlaying = false;
 let audio = new Audio();
-let currentVolume = 0.7;
+let currentVolume = 0.2;
 let shuffleOn = false;
 let loopMode = 'off'; // 'off', 'all', 'one'
 let currentLanguage = 'de';
 let settings = {};
+let sortMode = 'name'; // 'name', 'newest', 'nameDesc'
+let visualizerEnabled = true;
 
 // Visualizer State
 let audioContext, analyser, sourceNode;
 let visualizerRunning = false;
 
 // DOM Elements (will be assigned on DOMContentLoaded)
-let $, trackTitleEl, trackArtistEl, coverArtEl, coverPlaceholderEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, searchInput, ytUrlInput, ytNameInput, downloadBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, themeButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, animationToggle, backgroundAnimationEl;
+let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationToggle, backgroundAnimationEl;
 
 // =================================================================================
 // TRANSLATIONS
@@ -42,9 +44,11 @@ const translations = {
         changeButton: 'Ändern', audioQuality: 'Audioqualität (Download)', qualityBest: 'Beste',
         qualityHigh: 'Hoch (192k)', qualityStandard: 'Standard (128k)',
         backgroundAnimation: 'Hintergrundanimation',
-        blueTheme: 'Blau', darkTheme: 'Dunkel', lightTheme: 'Hell',
+        blueTheme: 'Blau', darkTheme: 'Dunkel', lightTheme: 'Hell', blurpleTheme: 'Blurple', greyTheme: 'Grau',
         shuffle: 'Zufallswiedergabe', previous: 'Zurück', playPause: 'Abspielen/Pause',
         next: 'Weiter', loop: 'Wiederholen', settings: 'Einstellungen', close: 'Schließen',
+        theme: 'Design', visualizer: 'Visualizer', sortBy: 'Sortieren nach',
+        sortNewest: 'Zuletzt geändert', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
     },
     en: {
         appTitle: 'Music Player', appSubtitle: 'Local & YouTube',
@@ -61,9 +65,11 @@ const translations = {
         changeButton: 'Change', audioQuality: 'Audio Quality (Download)', qualityBest: 'Best',
         qualityHigh: 'High (192k)', qualityStandard: 'Standard (128k)',
         backgroundAnimation: 'Background Animation',
-        blueTheme: 'Blue', darkTheme: 'Dark', lightTheme: 'Light',
+        blueTheme: 'Blue', darkTheme: 'Dark', lightTheme: 'Light', blurpleTheme: 'Blurple', greyTheme: 'Grey',
         shuffle: 'Shuffle', previous: 'Previous', playPause: 'Play/Pause',
         next: 'Next', loop: 'Loop', settings: 'Settings', close: 'Close',
+        theme: 'Theme', visualizer: 'Visualizer', sortBy: 'Sort By',
+        sortNewest: 'Recently Modified', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
     }
 };
 
@@ -119,19 +125,12 @@ function updateUIForCurrentTrack() {
     if (currentIndex === -1 || !playlist[currentIndex]) {
         trackTitleEl.textContent = tr('nothingPlaying');
         trackArtistEl.textContent = '...';
-        coverArtEl.style.display = 'none';
-        coverPlaceholderEl.style.display = 'flex';
         renderPlaylist();
         return;
     }
     const track = playlist[currentIndex];
     trackTitleEl.textContent = track.title;
     trackArtistEl.textContent = track.artist || tr('unknownArtist');
-    window.api.getCover(track.path).then(coverUrl => {
-        coverArtEl.src = coverUrl || '';
-        coverArtEl.style.display = coverUrl ? 'block' : 'none';
-        coverPlaceholderEl.style.display = coverUrl ? 'none' : 'flex';
-    });
     renderPlaylist();
 }
 
@@ -171,7 +170,13 @@ function renderPlaylist() {
 }
 
 function applyTranslations() {
-    document.querySelectorAll('[data-lang-key]').forEach(el => el.textContent = tr(el.dataset.langKey));
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        if (el.tagName === 'OPTION') {
+            el.textContent = tr(el.dataset.langKey);
+        } else {
+            el.textContent = tr(el.dataset.langKey);
+        }
+    });
     document.querySelectorAll('[data-lang-placeholder]').forEach(el => el.placeholder = tr(el.dataset.langPlaceholder));
     document.querySelectorAll('[data-lang-title]').forEach(el => el.title = tr(el.dataset.langTitle));
     document.title = tr('appTitle');
@@ -214,7 +219,7 @@ async function handleDownload() {
 // =================================================================================
 
 function startVisualizer() {
-    if (visualizerRunning) return;
+    if (visualizerRunning || !visualizerEnabled) return;
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
     sourceNode = audioContext.createMediaElementSource(audio);
     analyser = audioContext.createAnalyser();
@@ -247,6 +252,52 @@ function drawVisualizer() {
     }
 }
 
+// Attach audio DOM event listeners for playback control and UI updates
+function setupAudioEvents() {
+    audio.addEventListener('timeupdate', () => {
+        if (!isNaN(audio.duration)) {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = `${percent}%`;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        }
+    });
+
+    audio.addEventListener('durationchange', () => {
+        durationEl.textContent = isNaN(audio.duration) ? '0:00' : formatTime(audio.duration);
+    });
+
+    audio.addEventListener('play', () => {
+        isPlaying = true;
+        updatePlayPauseUI();
+        updateUIForCurrentTrack();
+        if (!visualizerRunning) startVisualizer();
+    });
+
+    audio.addEventListener('pause', () => {
+        isPlaying = false;
+        updatePlayPauseUI();
+    });
+
+    audio.addEventListener('ended', () => {
+        if (loopMode === 'one') {
+            audio.currentTime = 0;
+            audio.play();
+        } else {
+            playNext();
+        }
+    });
+
+    audio.addEventListener('volumechange', () => {
+        currentVolume = audio.volume;
+        volumeSlider.value = currentVolume;
+        volumeIcon.innerHTML = getVolumeIcon(currentVolume);
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+        durationEl.textContent = formatTime(audio.duration);
+    });
+}
+
 // =================================================================================
 // SETTINGS
 // =================================================================================
@@ -256,6 +307,9 @@ async function loadSettings() {
     downloadFolderInput.value = settings.downloadFolder;
     qualitySelect.value = settings.audioQuality;
     animationToggle.checked = settings.animationsEnabled;
+    themeSelect.value = settings.theme || 'blue';
+    visualizerToggle.checked = settings.visualizerEnabled !== false;
+    visualizerEnabled = settings.visualizerEnabled !== false;
     applyAnimationSetting(settings.animationsEnabled);
 }
 
@@ -287,40 +341,61 @@ function filterPlaylist(query) {
     renderPlaylist();
 }
 
+function sortPlaylist(mode) {
+    const sorted = [...basePlaylist];
+    if (mode === 'name') {
+        sorted.sort((a, b) => a.title.localeCompare(b.title, 'de', { numeric: true }));
+    } else if (mode === 'nameDesc') {
+        sorted.sort((a, b) => b.title.localeCompare(a.title, 'de', { numeric: true }));
+    } else if (mode === 'newest') {
+        // Sort by modified time (newest first) - requires mtime in track data
+        sorted.sort((a, b) => (b.mtime || 0) - (a.mtime || 0));
+    }
+    basePlaylist = sorted;
+    playlist = [...basePlaylist];
+    const currentTrack = currentIndex >= 0 ? playlist[currentIndex] : null;
+    currentIndex = currentTrack ? playlist.findIndex(t => t.path === currentTrack.path) : -1;
+    renderPlaylist();
+}
 function setupEventListeners() {
-    playBtn.addEventListener('click', () => {
+    // Safe bind helper for optional elements
+    const bind = (el, ev, handler) => { if (el && typeof el.addEventListener === 'function') el.addEventListener(ev, handler); };
+
+    bind(playBtn, 'click', () => {
         if (playlist.length === 0) return;
         if (isPlaying) audio.pause();
         else { (currentIndex === -1) ? playTrack(0) : audio.play(); }
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
     });
-    nextBtn.addEventListener('click', playNext);
-    prevBtn.addEventListener('click', playPrev);
-    shuffleBtn.addEventListener('click', () => {
+    bind(nextBtn, 'click', playNext);
+    bind(prevBtn, 'click', playPrev);
+    bind(shuffleBtn, 'click', () => {
         shuffleOn = !shuffleOn;
         shuffleBtn.classList.toggle('mode-btn--active', shuffleOn);
     });
-    loopBtn.addEventListener('click', () => {
+    bind(loopBtn, 'click', () => {
         loopMode = loopMode === 'off' ? 'all' : (loopMode === 'all' ? 'one' : 'off');
         loopBtn.classList.toggle('mode-btn--active', loopMode !== 'off');
     });
-    progressBar.addEventListener('click', (e) => {
+    bind(progressBar, 'click', (e) => {
         if (!isNaN(audio.duration)) {
             const rect = progressBar.getBoundingClientRect();
             audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
         }
     });
-    volumeSlider.addEventListener('input', (e) => { audio.volume = e.target.value; });
-    loadFolderBtn.addEventListener('click', async () => {
+    bind(volumeSlider, 'input', (e) => { audio.volume = parseFloat(e.target.value); });
+    bind(loadFolderBtn, 'click', async () => {
         const result = await window.api.selectMusicFolder();
         if (result && result.tracks) {
             basePlaylist = result.tracks;
             playlist = [...basePlaylist];
-            playTrack(0);
+            currentIndex = -1;
+            renderPlaylist();
+            updateUIForCurrentTrack();
         }
     });
-    searchInput.addEventListener('input', (e) => filterPlaylist(e.target.value));
-    downloadBtn.addEventListener('click', handleDownload);
+    bind(searchInput, 'input', (e) => filterPlaylist(e.target.value));
+    bind(downloadBtn, 'click', handleDownload);
     window.api.onDownloadProgress((data) => {
         if (data && typeof data.percent === 'number') {
             downloadProgressFill.style.width = `${data.percent.toFixed(1)}%`;
@@ -328,32 +403,43 @@ function setupEventListeners() {
         }
     });
     langButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        bind(btn, 'click', () => {
             currentLanguage = btn.dataset.lang;
             langButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             applyTranslations();
         });
     });
-    themeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.documentElement.setAttribute('data-theme', btn.dataset.theme);
-            themeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
+    bind(themeSelect, 'change', (e) => {
+        const theme = e.target.value;
+        document.documentElement.setAttribute('data-theme', theme);
+        window.api.setSetting('theme', theme);
     });
-    settingsBtn.addEventListener('click', () => { settingsOverlay.style.display = 'flex'; });
-    settingsCloseBtn.addEventListener('click', () => { settingsOverlay.style.display = 'none'; });
-    settingsOverlay.addEventListener('click', (e) => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; });
-    changeFolderBtn.addEventListener('click', async () => {
+    bind(sortSelect, 'change', (e) => {
+        sortMode = e.target.value;
+        sortPlaylist(sortMode);
+    });
+    bind(settingsBtn, 'click', () => { settingsOverlay.style.display = 'flex'; });
+    bind(settingsCloseBtn, 'click', () => { settingsOverlay.style.display = 'none'; });
+    bind(settingsOverlay, 'click', (e) => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; });
+    bind(changeFolderBtn, 'click', async () => {
         const newFolder = await window.api.selectFolder();
         if (newFolder) {
             downloadFolderInput.value = newFolder;
             window.api.setSetting('downloadFolder', newFolder);
         }
     });
-    qualitySelect.addEventListener('change', (e) => window.api.setSetting('audioQuality', e.target.value));
-    animationToggle.addEventListener('change', (e) => {
+    bind(qualitySelect, 'change', (e) => window.api.setSetting('audioQuality', e.target.value));
+    bind(visualizerToggle, 'change', (e) => {
+        visualizerEnabled = e.target.checked;
+        window.api.setSetting('visualizerEnabled', visualizerEnabled);
+        if (!visualizerEnabled) {
+            visualizerRunning = false;
+            const ctx = visualizerCanvas.getContext('2d');
+            if (ctx) ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+        }
+    });
+    bind(animationToggle, 'change', (e) => {
         const enabled = e.target.checked;
         window.api.setSetting('animationsEnabled', enabled);
         applyAnimationSetting(enabled);
@@ -374,8 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $ = (selector) => document.querySelector(selector);
     trackTitleEl = $('#track-title-large');
     trackArtistEl = $('#track-artist-large');
-    coverArtEl = $('#cover-art');
-    coverPlaceholderEl = $('.cover-placeholder');
+    musicEmojiEl = $('#music-emoji');
     currentTimeEl = $('#current-time');
     durationEl = $('#duration');
     progressBar = $('.progress-bar');
@@ -393,6 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playlistInfoBar = $('.playlist-info-bar');
     loadFolderBtn = $('#load-folder-btn');
     searchInput = $('.playlist-search-input');
+    sortSelect = $('#sort-select');
     ytUrlInput = $('#yt-url-input');
     ytNameInput = $('#yt-name-input');
     downloadBtn = $('#download-btn');
@@ -401,13 +487,14 @@ document.addEventListener('DOMContentLoaded', () => {
     visualizerCanvas = $('#visualizer-canvas');
     visualizerContainer = $('.visualizer-container');
     langButtons = document.querySelectorAll('.lang-btn');
-    themeButtons = document.querySelectorAll('.theme-btn');
     settingsBtn = $('#settings-btn');
     settingsOverlay = $('#settings-overlay');
     settingsCloseBtn = $('#settings-close-btn');
     downloadFolderInput = $('#default-download-folder');
     changeFolderBtn = $('#change-download-folder-btn');
     qualitySelect = $('#audio-quality-select');
+    themeSelect = $('#theme-select');
+    visualizerToggle = $('#toggle-visualizer');
     animationToggle = $('#toggle-background-animation');
     backgroundAnimationEl = $('.background-animation');
 
@@ -415,6 +502,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAudioEvents();
     setupEventListeners();
     loadSettings().then(() => {
+        // Apply theme from settings
+        const theme = settings.theme || 'blue';
+        document.documentElement.setAttribute('data-theme', theme);
+        if (themeSelect) themeSelect.value = theme;
         applyTranslations();
     });
     renderPlaylist();

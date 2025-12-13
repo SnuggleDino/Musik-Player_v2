@@ -28,11 +28,6 @@
                 <button id="settings-btn" class="control-btn" data-lang-title="settings">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                 </button>
-                <div class="theme-panel">
-                    <button class="theme-btn active" data-theme="blue" data-lang-title="blueTheme"></button>
-                    <button class="theme-btn" data-theme="dark" data-lang-title="darkTheme"></button>
-                    <button class="theme-btn" data-theme="light" data-lang-title="lightTheme"></button>
-                </div>
             </div>
         </header>
 
@@ -40,10 +35,7 @@
             <section class="player-column">
                 <div class="cover-art-container">
                     <div class="cover-art-wrapper">
-                        <img id="cover-art" src="" alt="Album Cover" style="display: none;">
-                        <div class="cover-placeholder">
-                            <svg class="music-note-icon" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55c-2.21 0-4 1.79-4 4s1.79 4 4 4s4-1.79 4-4V7h4V3h-6z"/></svg>
-                        </div>
+                        <div id="music-emoji" class="music-emoji">🎵</div>
                     </div>
                 </div>
                 <div class="track-info-area">
@@ -83,7 +75,7 @@
                 <div class="volume-control-area">
                     <div class="volume-row">
                         <span class="volume-icon"></span>
-                        <input type="range" class="volume-slider" min="0" max="1" step="0.01" value="0.7">
+                        <input type="range" class="volume-slider" min="0" max="1" step="0.01" value="0.2">
                     </div>
                 </div>
             </section>
@@ -105,7 +97,14 @@
                             <h2 class="panel-title" style="margin:0; border:none;" data-lang-key="playlistTitle"></h2>
                             <button id="load-folder-btn" class="load-btn" data-lang-key="loadFolder"></button>
                         </div>
-                        <div class="playlist-toolbar"><input type="text" class="playlist-search-input" data-lang-placeholder="searchPlaceholder"></div>
+                    <div class="playlist-toolbar">
+                        <input type="text" class="playlist-search-input" data-lang-placeholder="searchPlaceholder">
+                        <select id="sort-select" class="playlist-sort-select">
+                            <option value="name" data-lang-key="sortNameAZ">Name A-Z</option>
+                            <option value="nameDesc" data-lang-key="sortNameZA">Name Z-A</option>
+                            <option value="newest" data-lang-key="sortNewest">Zuletzt geändert</option>
+                        </select>
+                    </div>
                         <p class="playlist-info-bar"></p>
                     </div>
                     <div class="playlist-scroll-area"><div class="empty-state" data-lang-key="emptyPlaylist"></div></div>
@@ -128,6 +127,16 @@
             </div>
             <div class="settings-content">
                 <div class="setting-item">
+                    <label for="theme-select" data-lang-key="theme"></label>
+                    <select id="theme-select" class="extras-input">
+                        <option value="blue" data-lang-key="blueTheme"></option>
+                        <option value="dark" data-lang-key="darkTheme"></option>
+                        <option value="light" data-lang-key="lightTheme"></option>
+                        <option value="blurple" data-lang-key="blurpleTheme"></option>
+                        <option value="grey" data-lang-key="greyTheme"></option>
+                    </select>
+                </div>
+                <div class="setting-item">
                     <label for="default-download-folder" data-lang-key="defaultDownloadFolder"></label>
                     <div class="input-group">
                         <input type="text" id="default-download-folder" class="extras-input" readonly>
@@ -141,6 +150,13 @@
                         <option value="high" data-lang-key="qualityHigh"></option>
                         <option value="standard" data-lang-key="qualityStandard"></option>
                     </select>
+                </div>
+                <div class="setting-item">
+                    <label data-lang-key="visualizer"></label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-visualizer" checked>
+                        <span class="slider"></span>
+                    </label>
                 </div>
                 <div class="setting-item">
                     <label data-lang-key="backgroundAnimation"></label>

@@ -1,5 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
+const util = require('util');
+const { execFile } = require('child_process');
 const fs = require('fs').promises;
 const YTDlpWrap = require('yt-dlp-wrap').default;
 
@@ -11,10 +13,10 @@ const SUPPORTED_EXTENSIONS = ['.mp3', '.m4a', '.flac', '.wav', '.ogg'];
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        minWidth: 940,
-        minHeight: 600,
+        width: 1300,
+        height: 850,
+        minWidth: 820,
+        minHeight: 680,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             contextIsolation: true,
@@ -51,6 +53,8 @@ async function main() {
             downloadFolder: app.getPath('downloads'),
             audioQuality: 'best',
             animationsEnabled: true,
+            theme: 'blue',
+            visualizerEnabled: true,
         }
     });
 
@@ -92,11 +96,13 @@ function registerIpcHandlers(store) {
                 const filePath = path.join(folderPath, file);
                 try {
                     const metadata = await mm.parseFile(filePath);
+                    const stat = await fs.stat(filePath);
                     return {
                         path: filePath,
                         title: metadata.common.title || path.basename(filePath, path.extname(filePath)),
                         artist: metadata.common.artist || 'Unbekannt',
                         duration: metadata.format.duration || 0,
+                        mtime: stat.mtimeMs || 0,
                     };
                 } catch (error) {
                     return null;
@@ -128,7 +134,7 @@ function registerIpcHandlers(store) {
                 store.set('downloadFolder', downloadFolder);
             }
 
-            const ytDlpPath = await YTDlpWrap.downloadFromGithub();
+            const ytDlpPath = path.join(__dirname, 'yt-dlp.exe');
             const ytDlpWrap = new YTDlpWrap(ytDlpPath);
             
             const qualityMap = { best: '0', high: '5', standard: '9' };
