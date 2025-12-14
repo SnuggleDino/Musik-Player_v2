@@ -508,13 +508,25 @@ function stopVisualizer() {
 
 function drawVisualizer() {
 
+
+
     if (!visualizerRunning || !isPlaying || !visualizerEnabled) {
+
+
 
         visualizerRunning = false; // Ensure it stops
 
+
+
         return;
 
+
+
     }
+
+
+
+
 
 
 
@@ -522,37 +534,169 @@ function drawVisualizer() {
 
 
 
+
+
+
+
     const bufferLength = analyser.frequencyBinCount;
 
+
+
     const dataArray = new Uint8Array(bufferLength);
+
+
 
     analyser.getByteFrequencyData(dataArray);
 
 
 
+
+
+
+
     const ctx = visualizerCanvas.getContext('2d');
 
+
+
     const { width, height } = visualizerCanvas;
+
+
 
     ctx.clearRect(0, 0, width, height);
 
 
 
+
+
+
+
     const barWidth = (width / bufferLength) * 1.5;
+
+
 
     let x = 0;
 
+
+
     for (let i = 0; i < bufferLength; i++) {
+
+
 
         const barHeight = (dataArray[i] / 255) * height * 0.9;
 
+
+
         ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+
+
 
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
 
+
+
         x += barWidth + 2;
 
+
+
     }
+
+
+
+
+
+
+
+    // Emoji Animation
+
+
+
+    if (musicEmojiEl && !isNaN(audio.currentTime)) {
+
+
+
+        // 1. Calculate bass level (e.g., avg of first 2 bins)
+
+
+
+        const bassBins = dataArray.slice(0, 2);
+
+
+
+        const bassLevel = bassBins.reduce((a, b) => a + b, 0) / bassBins.length;
+
+
+
+
+
+
+
+        // 2. Base floating motion (sine wave on audio time)
+
+
+
+        const floatAmplitude = 10; // pixels
+
+
+
+        const floatY = Math.sin(audio.currentTime * 2) * floatAmplitude;
+
+
+
+
+
+
+
+        // 3. Bass jump motion (scaling)
+
+
+
+        const bassThreshold = 180; // 0-255, needs tuning
+
+
+
+        const bassScaleMultiplier = 0.15;
+
+
+
+        let jumpScale = 1;
+
+
+
+        if (bassLevel > bassThreshold) {
+
+
+
+            // Map bass level above threshold to a small scale increase
+
+
+
+            const excess = Math.min((bassLevel - bassThreshold) / 50, 1); // Cap the effect
+
+
+
+            jumpScale = 1 + excess * bassScaleMultiplier;
+
+
+
+        }
+
+
+
+
+
+
+
+        // 4. Apply transforms
+
+
+
+        musicEmojiEl.style.transform = `translateY(${floatY}px) scale(${jumpScale})`;
+
+
+
+    }
+
+
 
 }
 

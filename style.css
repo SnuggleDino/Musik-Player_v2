@@ -58,8 +58,8 @@
     --bg-main: #1a1a1a;
     --bg-card: #2d2d2d;
     --bg-card-light: #3f3f3f;
-    --accent: #888888;
-    --accent-soft: rgba(136, 136, 136, 0.15);
+    --accent: #8190a3;
+    --accent-soft: rgba(129, 144, 163, 0.15);
     --text-main: #e0e0e0;
     --text-muted: #999999;
     --border-soft: #444444;
@@ -116,14 +116,17 @@ input, textarea { user-select: text; }
         radial-gradient(at 75% 30%, hsla(280, 80%, 55%, 0.3) 0px, transparent 40%),
         radial-gradient(at 90% 85%, hsla(340, 95%, 60%, 0.3) 0px, transparent 40%),
         radial-gradient(at 15% 80%, hsla(40, 90%, 55%, 0.3) 0px, transparent 40%);
-    background-size: 150% 150%;
-    animation: background-pan 35s ease-in-out infinite alternate;
+    background-size: 200% 200%;
+    animation: background-flow 40s ease-in-out infinite;
     will-change: transform;
 }
 
-@keyframes background-pan {
-    from { transform: translate(0%, 5%) scale(1); }
-    to { transform: translate(-5%, -5%) scale(1.1); }
+@keyframes background-flow {
+    0%   { background-position: 0% 0%; }
+    25%  { background-position: 100% 25%; }
+    50%  { background-position: 50% 100%; }
+    75%  { background-position: 25% 75%; }
+    100% { background-position: 0% 0%; }
 }
 
 /* =========================================
@@ -212,19 +215,7 @@ input, textarea { user-select: text; }
 }
 .music-emoji {
   font-size: 120px;
-  animation: float 3s ease-in-out infinite;
   transition: transform 0.1s ease-out;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-20px) scale(1); }
-}
-
-@keyframes bounce {
-  0% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-30px) scale(1.1); }
-  100% { transform: translateY(0px) scale(1); }
 }
 
 .track-info-area { text-align: center; margin-top: 20px;}
