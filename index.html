@@ -173,6 +173,28 @@
                             </label>
                         </div>
                     </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="coverEmoji"></strong>
+                            <p data-lang-key="coverEmojiDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="emoji-select" class="settings-select">
+                                <option value="note" data-lang-key="emojiNote">Musik Note</option>
+                                <option value="dino" data-lang-key="emojiDino">Dino</option>
+                                <option value="custom" data-lang-key="emojiCustom">Eigene</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="custom-emoji-container" style="display: none;">
+                        <div class="setting-label">
+                            <strong data-lang-key="customEmoji"></strong>
+                            <p data-lang-key="customEmojiDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" id="custom-emoji-input" class="settings-input" placeholder="🎵">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Downloads Section -->

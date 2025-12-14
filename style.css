@@ -482,7 +482,7 @@ input[type=range].volume-slider::-moz-range-thumb {
 }
 
 /* New Input Styles */
-.settings-select, .settings-input-readonly {
+.settings-select, .settings-input-readonly, .settings-input {
     width: 100%;
     background: rgba(0,0,0,0.2);
     border: 1px solid var(--border-soft);
@@ -494,11 +494,11 @@ input[type=range].volume-slider::-moz-range-thumb {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.settings-select:hover, .settings-input-readonly:hover {
+.settings-select:hover, .settings-input-readonly:hover, .settings-input:hover {
     border-color: var(--accent);
 }
 
-.settings-select:focus, .settings-input-readonly:focus {
+.settings-select:focus, .settings-input-readonly:focus, .settings-input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--accent-soft);
 }
