@@ -22,7 +22,7 @@ let audioContext, analyser, sourceNode;
 let visualizerRunning = false;
 
 // DOM Elements (will be assigned on DOMContentLoaded)
-let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationToggle, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput;
+let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationToggle, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDownloaderBtn, downloaderPanel;
 
 // =================================================================================
 // TRANSLATIONS
@@ -65,6 +65,7 @@ const translations = {
         shuffle: 'Zufallswiedergabe', previous: 'Zurück', playPause: 'Abspielen/Pause',
 
         next: 'Weiter', loop: 'Wiederholen', settings: 'Einstellungen', close: 'Schließen',
+        toggleDownloader: 'Downloader umschalten',
 
         theme: 'Design', visualizer: 'Visualizer', sortBy: 'Sortieren nach',
 
@@ -131,6 +132,7 @@ const translations = {
         shuffle: 'Shuffle', previous: 'Previous', playPause: 'Play/Pause',
 
         next: 'Next', loop: 'Loop', settings: 'Settings', close: 'Close',
+        toggleDownloader: 'Toggle Downloader',
 
         theme: 'Theme', visualizer: 'Visualizer', sortBy: 'Sort By',
 
@@ -909,40 +911,181 @@ function setupAudioEvents() {
 
 
 async function loadSettings() {
+
+
+
     settings = await window.api.getSettings();
 
+
+
+
+
+
+
     // Audio & UI settings
+
+
+
     currentVolume = settings.volume || 0.2;
+
+
+
     audio.volume = currentVolume;
+
+
+
     shuffleOn = settings.shuffle || false;
+
+
+
     loopMode = settings.loop || 'off';
+
+
+
     currentLanguage = settings.language || 'de';
+
+
+
     
+
+
+
     // UI elements
+
+
+
     if (downloadFolderInput) downloadFolderInput.value = settings.downloadFolder;
+
+
+
     if (qualitySelect) qualitySelect.value = settings.audioQuality;
+
+
+
     if (animationToggle) animationToggle.checked = settings.animationsEnabled;
+
+
+
     if (themeSelect) themeSelect.value = settings.theme || 'blue';
+
+
+
     if (visualizerToggle) {
+
+
+
         visualizerToggle.checked = settings.visualizerEnabled !== false;
+
+
+
         visualizerEnabled = settings.visualizerEnabled !== false;
+
+
+
     }
+
+
+
+    
+
+
 
     // Emoji Settings
+
+
+
     const coverEmoji = settings.coverEmoji || 'note';
+
+
+
     const customCoverEmoji = settings.customCoverEmoji || '🎵';
+
+
+
     if (emojiSelect) emojiSelect.value = coverEmoji;
+
+
+
     if (customEmojiInput) customEmojiInput.value = customCoverEmoji;
+
+
+
     updateEmoji(coverEmoji, customCoverEmoji);
+
+
+
     if (customEmojiContainer) {
+
+
+
         customEmojiContainer.style.display = coverEmoji === 'custom' ? 'grid' : 'none';
+
+
+
     }
 
+
+
+
+
+
+
+    // Downloader visibility
+
+
+
+    const downloaderVisible = settings.downloaderVisible !== false;
+
+
+
+    if (downloaderPanel) {
+
+
+
+        downloaderPanel.style.display = downloaderVisible ? 'flex' : 'none';
+
+
+
+    }
+
+
+
+    if (toggleDownloaderBtn) {
+
+
+
+        toggleDownloaderBtn.classList.toggle('mode-btn--active', downloaderVisible);
+
+
+
+    }
+
+
+
+
+
+
+
     // Apply loaded settings to UI
+
+
+
     if (backgroundAnimationEl) applyAnimationSetting(settings.animationsEnabled);
+
+
+
     if (shuffleBtn) shuffleBtn.classList.toggle('mode-btn--active', shuffleOn);
+
+
+
     if (loopBtn) loopBtn.classList.toggle('mode-btn--active', loopMode !== 'off');
+
+
+
     if (langButtons) langButtons.forEach(b => b.classList.toggle('active', b.dataset.lang === currentLanguage));
+
+
+
 }
 
 
@@ -1036,114 +1179,233 @@ function sortPlaylist(mode) {
 }
 
 function setupEventListeners() {
+
     // Safe bind helper for optional elements
+
     const bind = (el, ev, handler) => { if (el && typeof el.addEventListener === 'function') el.addEventListener(ev, handler); };
 
+
+
     bind(playBtn, 'click', () => {
+
         if (playlist.length === 0) return;
+
         if (isPlaying) audio.pause();
+
         else { (currentIndex === -1) ? playTrack(0) : audio.play(); }
+
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+
     });
+
     bind(nextBtn, 'click', playNext);
+
     bind(prevBtn, 'click', playPrev);
+
     bind(shuffleBtn, 'click', () => {
+
         shuffleOn = !shuffleOn;
+
         shuffleBtn.classList.toggle('mode-btn--active', shuffleOn);
+
         window.api.setSetting('shuffle', shuffleOn);
+
     });
+
     bind(loopBtn, 'click', () => {
+
         loopMode = loopMode === 'off' ? 'all' : (loopMode === 'all' ? 'one' : 'off');
+
         loopBtn.classList.toggle('mode-btn--active', loopMode !== 'off');
+
         window.api.setSetting('loop', loopMode);
+
     });
+
     bind(progressBar, 'click', (e) => {
+
         if (!isNaN(audio.duration)) {
+
             const rect = progressBar.getBoundingClientRect();
+
             audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+
         }
+
     });
+
     bind(volumeSlider, 'input', (e) => { audio.volume = parseFloat(e.target.value); });
+
     bind(loadFolderBtn, 'click', async () => {
+
         const result = await window.api.selectMusicFolder();
+
         if (result && result.tracks) {
+
             basePlaylist = result.tracks;
+
             playlist = [...basePlaylist];
+
             currentIndex = -1;
+
             renderPlaylist();
+
             updateUIForCurrentTrack();
+
         }
+
     });
+
     bind(searchInput, 'input', (e) => filterPlaylist(e.target.value));
+
     bind(downloadBtn, 'click', handleDownload);
+
     window.api.onDownloadProgress((data) => {
+
         if (data && typeof data.percent === 'number') {
+
             downloadProgressFill.style.width = `${data.percent.toFixed(1)}%`;
+
             downloadStatusEl.textContent = tr('statusProgress', data.percent.toFixed(1));
+
         }
+
     });
+
     langButtons.forEach(btn => {
+
         bind(btn, 'click', () => {
+
             currentLanguage = btn.dataset.lang;
+
             langButtons.forEach(b => b.classList.remove('active'));
+
             btn.classList.add('active');
+
             applyTranslations();
+
             window.api.setSetting('language', currentLanguage);
+
         });
+
     });
+
     bind(themeSelect, 'change', (e) => {
+
         const theme = e.target.value;
+
         document.documentElement.setAttribute('data-theme', theme);
+
         window.api.setSetting('theme', theme);
+
     });
+
     bind(sortSelect, 'change', (e) => {
+
         sortMode = e.target.value;
+
         sortPlaylist(sortMode);
+
     });
+
     bind(settingsBtn, 'click', () => { settingsOverlay.classList.add('visible'); });
+
     bind(settingsCloseBtn, 'click', () => { settingsOverlay.classList.remove('visible'); });
+
     bind(settingsOverlay, 'click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('visible'); });
+
     bind(changeFolderBtn, 'click', async () => {
+
         const newFolder = await window.api.selectFolder();
+
         if (newFolder) {
+
             downloadFolderInput.value = newFolder;
+
             window.api.setSetting('downloadFolder', newFolder);
+
         }
+
     });
+
     bind(qualitySelect, 'change', (e) => window.api.setSetting('audioQuality', e.target.value));
+
     bind(visualizerToggle, 'change', (e) => {
+
         visualizerEnabled = e.target.checked;
+
         window.api.setSetting('visualizerEnabled', visualizerEnabled);
+
         if (visualizerEnabled) {
+
             startVisualizer();
+
         } else {
+
             stopVisualizer();
+
         }
+
     });
+
     bind(animationToggle, 'change', (e) => {
+
         const enabled = e.target.checked;
+
         window.api.setSetting('animationsEnabled', enabled);
+
         applyAnimationSetting(enabled);
+
     });
+
+
 
     bind(emojiSelect, 'change', (e) => {
+
         const selected = e.target.value;
+
         customEmojiContainer.style.display = selected === 'custom' ? 'grid' : 'none';
+
         window.api.setSetting('coverEmoji', selected);
+
         updateEmoji(selected, customEmojiInput.value);
+
     });
 
+
+
     bind(customEmojiInput, 'input', (e) => {
+
         const customEmoji = e.target.value;
+
         window.api.setSetting('customCoverEmoji', customEmoji);
+
         updateEmoji('custom', customEmoji);
+
+    });
+
+    bind(toggleDownloaderBtn, 'click', () => {
+
+        const isVisible = downloaderPanel.style.display !== 'none';
+
+        downloaderPanel.style.display = isVisible ? 'none' : 'flex';
+
+        toggleDownloaderBtn.classList.toggle('mode-btn--active', !isVisible);
+
+        window.api.setSetting('downloaderVisible', !isVisible);
+
     });
 
     new ResizeObserver(() => {
+
         if(visualizerCanvas.width !== visualizerContainer.clientWidth) {
+
             visualizerCanvas.width = visualizerContainer.clientWidth;
+
         }
+
     }).observe(visualizerContainer);
+
 }
 
 
@@ -1158,67 +1420,244 @@ function setupEventListeners() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Assign DOM elements
+
 
     $ = (selector) => document.querySelector(selector);
 
+
+
     trackTitleEl = $('#track-title-large');
+
+
+
     trackArtistEl = $('#track-artist-large');
+
+
+
     musicEmojiEl = $('#music-emoji');
+
+
+
     currentTimeEl = $('#current-time');
+
+
+
     durationEl = $('#duration');
+
+
+
     progressBar = $('.progress-bar');
+
+
+
     progressFill = $('.progress-fill');
+
+
+
     playBtn = $('#play-btn');
+
+
+
     playIcon = $('#play-icon');
+
+
+
     pauseIcon = $('#pause-icon');
+
+
+
     prevBtn = $('#prev-btn');
+
+
+
     nextBtn = $('#next-btn');
+
+
+
     loopBtn = $('#loop-btn');
+
+
+
     shuffleBtn = $('#shuffle-btn');
+
+
+
     volumeSlider = $('.volume-slider');
+
+
+
     volumeIcon = $('.volume-icon');
+
+
+
     playlistEl = $('.playlist-scroll-area');
+
+
+
     playlistInfoBar = $('.playlist-info-bar');
+
+
+
     loadFolderBtn = $('#load-folder-btn');
+
+
+
     searchInput = $('.playlist-search-input');
+
+
+
     sortSelect = $('#sort-select');
+
+
+
     ytUrlInput = $('#yt-url-input');
+
+
+
     ytNameInput = $('#yt-name-input');
+
+
+
     downloadBtn = $('#download-btn');
+
+
+
     downloadStatusEl = $('.status-text');
+
+
+
     downloadProgressFill = $('.yt-progress-fill');
+
+
+
     visualizerCanvas = $('#visualizer-canvas');
+
+
+
     visualizerContainer = $('.visualizer-container');
+
+
+
     langButtons = document.querySelectorAll('.lang-btn');
+
+
+
     settingsBtn = $('#settings-btn');
+
+
+
     settingsOverlay = $('#settings-overlay');
+
+
+
     settingsCloseBtn = $('#settings-close-btn');
+
+
+
     downloadFolderInput = $('#default-download-folder');
+
+
+
     changeFolderBtn = $('#change-download-folder-btn');
+
+
+
     qualitySelect = $('#audio-quality-select');
+
+
+
     themeSelect = $('#theme-select');
+
+
+
     visualizerToggle = $('#toggle-visualizer');
+
+
+
     animationToggle = $('#toggle-background-animation');
+
+
+
     backgroundAnimationEl = $('.background-animation');
+
+
+
     emojiSelect = $('#emoji-select');
+
+
+
     customEmojiContainer = $('#custom-emoji-container');
+
+
+
     customEmojiInput = $('#custom-emoji-input');
 
+
+
+    toggleDownloaderBtn = $('#toggle-downloader-btn');
+
+
+
+    downloaderPanel = $('.extras-panel');
+
+
+
+
+
+
+
     // Initial setup
+
+
+
     setupAudioEvents();
+
+
+
     setupEventListeners();
+
+
+
     setupVisualizer();
+
+
+
     loadSettings().then(() => {
-        // Apply theme and language from settings
+
+
+
         document.documentElement.setAttribute('data-theme', settings.theme || 'blue');
+
+
+
         applyTranslations();
+
+
+
     });
+
+
+
     renderPlaylist();
+
+
+
     updatePlayPauseUI();
+
+
+
     audio.volume = currentVolume;
+
+
+
     volumeSlider.value = currentVolume;
+
+
+
     volumeIcon.innerHTML = getVolumeIcon(currentVolume);
+
+
+
 });
 let trackRowElements = [];
 
