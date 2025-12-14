@@ -119,51 +119,90 @@
     
     <script src="renderer.js"></script>
 
-    <div id="settings-overlay" class="overlay-container" style="display: none;">
+    <div id="settings-overlay" class="overlay-container">
         <div class="glass-panel settings-modal">
             <div class="settings-header">
-                <h2 class="panel-title" data-lang-key="settingsTitle"></h2>
-                <button id="settings-close-btn" class="control-btn" data-lang-title="close">&times;</button>
+                <h3 data-lang-key="settingsTitle"></h3>
+                <button id="settings-close-btn" data-lang-title="close">&times;</button>
             </div>
             <div class="settings-content">
-                <div class="setting-item">
-                    <label for="theme-select" data-lang-key="theme"></label>
-                    <select id="theme-select" class="extras-input">
-                        <option value="blue" data-lang-key="blueTheme"></option>
-                        <option value="dark" data-lang-key="darkTheme"></option>
-                        <option value="light" data-lang-key="lightTheme"></option>
-                        <option value="blurple" data-lang-key="blurpleTheme"></option>
-                        <option value="grey" data-lang-key="greyTheme"></option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <label for="default-download-folder" data-lang-key="defaultDownloadFolder"></label>
-                    <div class="input-group">
-                        <input type="text" id="default-download-folder" class="extras-input" readonly>
-                        <button id="change-download-folder-btn" class="extras-button" data-lang-key="changeButton"></button>
+                <!-- Appearance Section -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title" data-lang-key="sectionAppearance"></h4>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="theme"></strong>
+                            <p data-lang-key="themeDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="theme-select" class="settings-select">
+                                <option value="blue" data-lang-key="blueTheme"></option>
+                                <option value="dark" data-lang-key="darkTheme"></option>
+                                <option value="light" data-lang-key="lightTheme"></option>
+                                <option value="blurple" data-lang-key="blurpleTheme"></option>
+                                <option value="grey" data-lang-key="greyTheme"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="backgroundAnimation"></strong>
+                            <p data-lang-key="backgroundAnimationDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-background-animation">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="setting-item">
-                    <label for="audio-quality-select" data-lang-key="audioQuality"></label>
-                    <select id="audio-quality-select" class="extras-input">
-                        <option value="best" data-lang-key="qualityBest"></option>
-                        <option value="high" data-lang-key="qualityHigh"></option>
-                        <option value="standard" data-lang-key="qualityStandard"></option>
-                    </select>
+
+                <!-- Player Section -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title" data-lang-key="sectionPlayer"></h4>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="visualizer"></strong>
+                            <p data-lang-key="visualizerDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-visualizer">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div class="setting-item">
-                    <label data-lang-key="visualizer"></label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggle-visualizer" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <div class="setting-item">
-                    <label data-lang-key="backgroundAnimation"></label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggle-background-animation" checked>
-                        <span class="slider"></span>
-                    </label>
+
+                <!-- Downloads Section -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title" data-lang-key="sectionDownloads"></h4>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="defaultDownloadFolder"></strong>
+                            <p data-lang-key="defaultDownloadFolderDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <div class="input-group">
+                                <input type="text" id="default-download-folder" class="settings-input-readonly" readonly>
+                                <button id="change-download-folder-btn" class="settings-button" data-lang-key="changeButton"></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="audioQuality"></strong>
+                            <p data-lang-key="audioQualityDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                             <select id="audio-quality-select" class="settings-select">
+                                <option value="best" data-lang-key="qualityBest"></option>
+                                <option value="high" data-lang-key="qualityHigh"></option>
+                                <option value="standard" data-lang-key="qualityStandard"></option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -376,26 +376,172 @@ input[type=range].volume-slider::-moz-range-thumb {
 
 
 /* =========================================
-   SETTINGS MODAL
+   SETTINGS MODAL (NEW)
    ========================================= */
 
 .overlay-container {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(5px);
-    display: flex; justify-content: center; align-items: center; z-index: 100;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.settings-modal { width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
-.settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-.settings-header .panel-title { margin-bottom: 0; border-bottom: none; }
-.settings-header .control-btn { width: 36px; height: 36px; font-size: 1.5rem; }
+.overlay-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
 
-.settings-content { display: flex; flex-direction: column; gap: 15px; }
-.setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 5px; border-bottom: 1px solid var(--border-soft); }
-.setting-item:last-child { border-bottom: none; }
-.setting-item label { font-weight: 500; color: var(--text-main); }
-.setting-item .input-group, .setting-item select { width: 60%; margin-bottom: 0; }
+.settings-modal {
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.overlay-container.visible .settings-modal {
+    transform: scale(1);
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px 30px;
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink: 0;
+}
+
+.settings-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#settings-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+}
+
+#settings-close-btn:hover {
+    color: var(--text-main);
+    transform: rotate(90deg);
+}
+
+.settings-content {
+    padding: 30px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+}
+
+.settings-section-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-main);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-soft);
+    margin: 0;
+}
+
+.setting-item {
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    gap: 25px;
+    align-items: center;
+}
+
+.setting-label strong {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.setting-label p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.setting-control {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* New Input Styles */
+.settings-select, .settings-input-readonly {
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-soft);
+    padding: 10px 14px;
+    border-radius: 8px;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.settings-select:hover, .settings-input-readonly:hover {
+    border-color: var(--accent);
+}
+
+.settings-select:focus, .settings-input-readonly:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.input-group {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+}
+
+.input-group input {
+    flex-grow: 1;
+    min-width: 0; /* Prevents overflow in flex */
+}
+
+.settings-button {
+  background: var(--bg-card-light);
+  color: var(--text-main);
+  border: 1px solid var(--border-soft);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.settings-button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+:root[data-theme="light"] .settings-select,
+:root[data-theme="light"] .settings-input-readonly {
+  background: #f9fafb; color: #111827; border-color: #d1d5db;
+}
 
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 24px; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }

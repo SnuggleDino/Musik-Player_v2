@@ -29,307 +29,642 @@ let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, pro
 // =================================================================================
 
 const translations = {
+
     de: {
+
         appTitle: 'NovaWave - Musik Player', appSubtitle: 'Lokal & YouTube',
+
         nothingPlaying: 'Nichts spielt', unknownArtist: 'Unbekannter Künstler',
+
         loadFolder: 'Ordner laden', searchPlaceholder: 'Playlist durchsuchen...',
+
         emptyPlaylist: 'Playlist ist leer. Lade einen Ordner!',
+
         track: 'Titel', tracks: 'Titel', playlistTitle: 'Playlist',
+
         downloaderTitle: 'Downloader', downloadButton: 'Download', urlPlaceholder: 'YouTube URL...',
+
         renamePlaceholder: 'Optionaler Name...', statusReady: 'Bereit.', statusUrlMissing: 'URL fehlt!',
+
         statusFolderAbort: 'Ordnerauswahl abgebrochen.', statusStarting: 'Download startet...',
+
         statusSuccess: 'Download erfolgreich!', statusError: 'Fehler beim Download',
+
         statusProgress: (p) => `Lade... ${p}%`,
+
         settingsTitle: 'Einstellungen', defaultDownloadFolder: 'Standard-Download-Ordner',
+
         changeButton: 'Ändern', audioQuality: 'Audioqualität (Download)', qualityBest: 'Beste',
+
         qualityHigh: 'Hoch (192k)', qualityStandard: 'Standard (128k)',
+
         backgroundAnimation: 'Hintergrundanimation',
+
         blueTheme: 'Blau', darkTheme: 'Dunkel', lightTheme: 'Hell', blurpleTheme: 'Blurple', greyTheme: 'Grau',
+
         shuffle: 'Zufallswiedergabe', previous: 'Zurück', playPause: 'Abspielen/Pause',
+
         next: 'Weiter', loop: 'Wiederholen', settings: 'Einstellungen', close: 'Schließen',
+
         theme: 'Design', visualizer: 'Visualizer', sortBy: 'Sortieren nach',
+
         sortNewest: 'Zuletzt geändert', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
+
+        sectionAppearance: 'Erscheinungsbild',
+
+        themeDescription: 'Passe das Aussehen und die Farbgebung der App an.',
+
+        backgroundAnimationDescription: 'Aktiviere oder deaktiviere die globale Hintergrundanimation.',
+
+        sectionPlayer: 'Player',
+
+        visualizerDescription: 'Aktiviere oder deaktiviere den Audio-Visualizer auf dem Player.',
+
+        sectionDownloads: 'Downloads',
+
+        defaultDownloadFolderDescription: 'Lege den Standardordner für alle YouTube-Downloads fest.',
+
+        audioQualityDescription: 'Wähle die Audioqualität für neue YouTube-Downloads.',
+
     },
+
     en: {
+
         appTitle: 'NovaWave - Music Player', appSubtitle: 'Local & YouTube',
+
         nothingPlaying: 'Nothing Playing', unknownArtist: 'Unknown Artist',
+
         loadFolder: 'Load Folder', searchPlaceholder: 'Search playlist...',
+
         emptyPlaylist: 'Playlist is empty. Load a folder!',
+
         track: 'track', tracks: 'tracks', playlistTitle: 'Playlist',
+
         downloaderTitle: 'Downloader', downloadButton: 'Download', urlPlaceholder: 'YouTube URL...',
+
         renamePlaceholder: 'Optional name...', statusReady: 'Ready.', statusUrlMissing: 'URL is missing!',
+
         statusFolderAbort: 'Folder selection aborted.', statusStarting: 'Starting download...',
+
         statusSuccess: 'Download successful!', statusError: 'Download error',
+
         statusProgress: (p) => `Downloading... ${p}%`,
+
         settingsTitle: 'Settings', defaultDownloadFolder: 'Default Download Folder',
+
         changeButton: 'Change', audioQuality: 'Audio Quality (Download)', qualityBest: 'Best',
+
         qualityHigh: 'High (192k)', qualityStandard: 'Standard (128k)',
+
         backgroundAnimation: 'Background Animation',
+
         blueTheme: 'Blue', darkTheme: 'Dark', lightTheme: 'Light', blurpleTheme: 'Blurple', greyTheme: 'Grey',
+
         shuffle: 'Shuffle', previous: 'Previous', playPause: 'Play/Pause',
+
         next: 'Next', loop: 'Loop', settings: 'Settings', close: 'Close',
+
         theme: 'Theme', visualizer: 'Visualizer', sortBy: 'Sort By',
+
         sortNewest: 'Recently Modified', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
+
+        sectionAppearance: 'Appearance',
+
+        themeDescription: 'Customize the look and feel of the application.',
+
+        backgroundAnimationDescription: 'Enable or disable the global background animation.',
+
+        sectionPlayer: 'Player',
+
+        visualizerDescription: 'Enable or disable the audio visualizer on the player.',
+
+        sectionDownloads: 'Downloads',
+
+        defaultDownloadFolderDescription: 'Set the default folder for all YouTube downloads.',
+
+        audioQualityDescription: 'Choose the audio quality for new YouTube downloads.',
+
     }
+
 };
 
+
+
 function tr(key, ...args) {
+
     const lang = translations[currentLanguage] || translations.de;
+
     const text = (lang && lang[key]) || key;
+
     return typeof text === 'function' ? text(...args) : text;
+
 }
 
+
+
 // =================================================================================
+
 // CORE PLAYER LOGIC
+
 // =================================================================================
+
+
 
 function playTrack(index) {
+
     if (index < 0 || index >= playlist.length) {
+
         isPlaying = false;
+
         updatePlayPauseUI();
+
         return;
+
     }
+
     currentIndex = index;
+
     const track = playlist[index];
+
     audio.src = `file://${track.path}`;
+
     audio.play().catch(e => console.error("Error playing audio:", e));
+
     isPlaying = true;
+
     updateUIForCurrentTrack();
+
 }
+
+
 
 function playNext() {
+
     let nextIndex;
+
     if (shuffleOn) {
+
         nextIndex = Math.floor(Math.random() * playlist.length);
+
     } else {
+
         nextIndex = currentIndex + 1;
+
         if (nextIndex >= playlist.length) {
+
             if (loopMode === 'all') nextIndex = 0;
+
             else { isPlaying = false; updatePlayPauseUI(); return; }
+
         }
+
     }
+
     playTrack(nextIndex);
+
 }
+
+
 
 function playPrev() {
+
     if (audio.currentTime > 3) audio.currentTime = 0;
+
     else playTrack(currentIndex - 1 < 0 ? playlist.length - 1 : currentIndex - 1);
+
 }
 
+
+
 // =================================================================================
+
 // UI & DOM MANIPULATION
+
 // =================================================================================
+
+
 
 function updateUIForCurrentTrack() {
+
     if (currentIndex === -1 || !playlist[currentIndex]) {
+
         trackTitleEl.textContent = tr('nothingPlaying');
+
         trackArtistEl.textContent = '...';
+
         renderPlaylist();
+
         return;
+
     }
+
     const track = playlist[currentIndex];
+
     trackTitleEl.textContent = track.title;
+
     trackArtistEl.textContent = track.artist || tr('unknownArtist');
+
     renderPlaylist();
+
 }
+
+
 
 function updatePlayPauseUI() {
+
     playIcon.style.display = isPlaying ? 'none' : 'block';
+
     pauseIcon.style.display = isPlaying ? 'block' : 'none';
+
 }
+
+
 
 function renderPlaylist() {
+
     if (!playlistEl) return;
+
     playlistEl.innerHTML = '';
+
     if (playlist.length === 0) {
+
         playlistEl.innerHTML = `<div class="empty-state">${tr('emptyPlaylist')}</div>`;
+
         playlistInfoBar.textContent = `0 ${tr('tracks')}`;
+
         return;
+
     }
+
     const fragment = document.createDocumentFragment();
+
     playlist.forEach((track, index) => {
+
         const row = document.createElement('div');
+
         row.className = 'track-row';
+
         if (index === currentIndex) row.classList.add('active');
+
         const playingIcon = `<svg class="track-playing-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+
         row.innerHTML = `
+
             <div class="track-index">${isPlaying && index === currentIndex ? playingIcon : index + 1}</div>
+
             <div class="track-info-block">
+
                 <div class="track-title-small">${track.title}</div>
+
                 <div class="track-artist-small">${track.artist || tr('unknownArtist')}</div>
+
             </div>
+
             <div class="track-duration">${formatTime(track.duration)}</div>
+
         `;
+
         row.addEventListener('click', () => playTrack(index));
+
         fragment.appendChild(row);
+
     });
+
     playlistEl.appendChild(fragment);
+
     const trackCount = playlist.length;
+
     playlistInfoBar.textContent = `${trackCount} ${trackCount === 1 ? tr('track') : tr('tracks')}`;
+
 }
+
+
 
 function applyTranslations() {
+
     document.querySelectorAll('[data-lang-key]').forEach(el => {
+
         if (el.tagName === 'OPTION') {
+
             el.textContent = tr(el.dataset.langKey);
+
         } else {
+
             el.textContent = tr(el.dataset.langKey);
+
         }
+
     });
+
     document.querySelectorAll('[data-lang-placeholder]').forEach(el => el.placeholder = tr(el.dataset.langPlaceholder));
+
     document.querySelectorAll('[data-lang-title]').forEach(el => el.title = tr(el.dataset.langTitle));
+
     document.title = tr('appTitle');
+
     updateUIForCurrentTrack();
+
     renderPlaylist();
+
 }
 
+
+
 // =================================================================================
+
 // DOWNLOADER
+
 // =================================================================================
+
+
 
 async function handleDownload() {
+
     const url = ytUrlInput.value.trim();
+
     if (!url) {
+
         downloadStatusEl.textContent = tr('statusUrlMissing');
+
         return;
+
     }
+
     downloadStatusEl.textContent = tr('statusStarting');
+
     downloadProgressFill.style.width = '0%';
+
     try {
+
         const result = await window.api.downloadFromYouTube({
+
             url,
+
             customName: ytNameInput.value.trim(),
+
             quality: qualitySelect.value,
+
         });
+
         if (result.success) {
+
             downloadStatusEl.textContent = tr('statusSuccess');
+
             ytUrlInput.value = '';
+
             ytNameInput.value = '';
+
         } else {
+
             downloadStatusEl.textContent = `${tr('statusError')}: ${result.error}`;
+
         }
+
     } catch (err) {
+
         downloadStatusEl.textContent = `${tr('statusError')}: ${err.message}`;
+
     }
+
 }
 
+
+
 // =================================================================================
+
 // VISUALIZER
+
 // =================================================================================
+
+
 
 function setupVisualizer() {
+
     if (audioContext) return; // Already setup
+
     try {
+
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
         sourceNode = audioContext.createMediaElementSource(audio);
+
         analyser = audioContext.createAnalyser();
+
         analyser.fftSize = 256;
+
         sourceNode.connect(analyser);
+
         analyser.connect(audioContext.destination);
+
     } catch (e) {
+
         console.error("Failed to initialize visualizer:", e);
+
         visualizerEnabled = false; // Disable if setup fails
+
     }
+
 }
+
+
 
 function startVisualizer() {
+
     if (!audioContext || visualizerRunning || !visualizerEnabled || !isPlaying) {
+
         return;
+
     }
+
     if (audioContext.state === 'suspended') {
+
         audioContext.resume();
+
     }
+
     visualizerRunning = true;
+
     drawVisualizer();
+
 }
+
+
 
 function stopVisualizer() {
+
     visualizerRunning = false;
+
     if (visualizerCanvas) {
+
         const ctx = visualizerCanvas.getContext('2d');
+
         ctx.clearRect(0, 0, visualizerCanvas.width, visualizerCanvas.height);
+
     }
+
 }
 
+
+
 function drawVisualizer() {
+
     if (!visualizerRunning || !isPlaying || !visualizerEnabled) {
+
         visualizerRunning = false; // Ensure it stops
+
         return;
+
     }
+
+
 
     requestAnimationFrame(drawVisualizer);
 
+
+
     const bufferLength = analyser.frequencyBinCount;
+
     const dataArray = new Uint8Array(bufferLength);
+
     analyser.getByteFrequencyData(dataArray);
 
+
+
     const ctx = visualizerCanvas.getContext('2d');
+
     const { width, height } = visualizerCanvas;
+
     ctx.clearRect(0, 0, width, height);
 
+
+
     const barWidth = (width / bufferLength) * 1.5;
+
     let x = 0;
+
     for (let i = 0; i < bufferLength; i++) {
+
         const barHeight = (dataArray[i] / 255) * height * 0.9;
+
         ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent');
+
         ctx.fillRect(x, height - barHeight, barWidth, barHeight);
+
         x += barWidth + 2;
+
     }
+
 }
+
+
+
 
 
 // Attach audio DOM event listeners for playback control and UI updates
+
 function setupAudioEvents() {
+
     audio.addEventListener('timeupdate', () => {
+
         if (!isNaN(audio.duration)) {
+
             const percent = (audio.currentTime / audio.duration) * 100;
+
             progressFill.style.width = `${percent}%`;
+
             currentTimeEl.textContent = formatTime(audio.currentTime);
+
         }
+
     });
+
+
 
     audio.addEventListener('durationchange', () => {
+
         durationEl.textContent = isNaN(audio.duration) ? '0:00' : formatTime(audio.duration);
+
     });
+
+
 
     audio.addEventListener('play', () => {
+
         isPlaying = true;
+
         updatePlayPauseUI();
+
         updateUIForCurrentTrack();
+
         startVisualizer();
+
     });
+
+
 
     audio.addEventListener('pause', () => {
+
         isPlaying = false;
+
         updatePlayPauseUI();
+
         stopVisualizer();
+
     });
+
+
 
     audio.addEventListener('ended', () => {
+
         stopVisualizer();
+
         if (loopMode === 'one') {
+
             audio.currentTime = 0;
+
             audio.play();
+
         } else {
+
             playNext();
+
         }
+
     });
+
+
 
     audio.addEventListener('volumechange', () => {
+
         currentVolume = audio.volume;
+
         volumeSlider.value = currentVolume;
+
         volumeIcon.innerHTML = getVolumeIcon(currentVolume);
+
         window.api.setSetting('volume', currentVolume);
+
     });
+
+
 
     audio.addEventListener('loadedmetadata', () => {
+
         durationEl.textContent = formatTime(audio.duration);
+
     });
+
 }
 
+
+
 // =================================================================================
+
 // SETTINGS
+
 // =================================================================================
+
+
 
 async function loadSettings() {
 
@@ -603,11 +938,11 @@ function setupEventListeners() {
 
     });
 
-    bind(settingsBtn, 'click', () => { settingsOverlay.style.display = 'flex'; });
+    bind(settingsBtn, 'click', () => { settingsOverlay.classList.add('visible'); });
 
-    bind(settingsCloseBtn, 'click', () => { settingsOverlay.style.display = 'none'; });
+    bind(settingsCloseBtn, 'click', () => { settingsOverlay.classList.remove('visible'); });
 
-    bind(settingsOverlay, 'click', (e) => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; });
+    bind(settingsOverlay, 'click', (e) => { if (e.target === settingsOverlay) settingsOverlay.classList.remove('visible'); });
 
     bind(changeFolderBtn, 'click', async () => {
 
