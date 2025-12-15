@@ -143,14 +143,14 @@ function registerIpcHandlers(store) {
             
             const qualityMap = { best: '0', high: '5', standard: '9' };
             const fileNameTemplate = customName ? `${customName}.%(ext)s` : '%(title)s.%(ext)s';
-            const outputPath = path.join(downloadFolder, fileNameTemplate);
 
             const process = ytDlpWrap.exec([
                 url, '-x',
                 '--audio-format', 'mp3',
                 '--audio-quality', qualityMap[quality] || '0',
                 '--embed-thumbnail', '--add-metadata',
-                '-o', outputPath,
+                '-P', downloadFolder,
+                '-o', fileNameTemplate,
             ]);
             
             process.on('progress', (progress) => {
