@@ -9,7 +9,7 @@ const NodeID3 = require('node-id3');
 // --- Electron-Konfiguration vor App-Start ---
 app.commandLine.appendSwitch('--disk-cache-size', '0');
 app.commandLine.appendSwitch('--disable-gpu-shader-disk-cache');
-app.disableHardwareAcceleration();
+// app.disableHardwareAcceleration(); // Disabled to improve performance
 
 // --- Cache-Verzeichnis vor der App-Initialisierung setzen ---
 const cachePath = path.join(app.getPath('userData'), 'cache');
@@ -272,7 +272,7 @@ function registerIpcHandlers(store) {
                 process.on('error', reject);
             });
 
-            return { success: true, path: outputPath };
+            return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
         }

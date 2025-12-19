@@ -290,7 +290,7 @@ function updateUIForCurrentTrack() {
 
         trackArtistEl.textContent = '...';
 
-        renderPlaylist();
+        updateActiveTrackInPlaylist();
 
         return;
 
@@ -302,7 +302,7 @@ function updateUIForCurrentTrack() {
 
     trackArtistEl.textContent = track.artist || tr('unknownArtist');
 
-    renderPlaylist();
+    updateActiveTrackInPlaylist();
 
 }
 
@@ -314,8 +314,54 @@ function updatePlayPauseUI() {
 
     pauseIcon.style.display = isPlaying ? 'block' : 'none';
 
+    // Also update the icon in the playlist if it's visible
+    updateActiveTrackInPlaylist();
 }
 
+
+
+function updateActiveTrackInPlaylist() {
+    if (!playlistEl) return;
+    
+    // 1. Remove active class and icon from previously active row
+    const previousActive = playlistEl.querySelector('.track-row.active');
+    if (previousActive) {
+        previousActive.classList.remove('active');
+        const indexVal = previousActive.dataset.index;
+        // Restore the index number
+        const indexEl = previousActive.querySelector('.track-index');
+        if (indexEl) indexEl.textContent = parseInt(indexVal) + 1; 
+    }
+
+    // 2. Add active class and icon to new active row
+    if (currentIndex !== -1) {
+        const newActive = playlistEl.querySelector(`.track-row[data-index="${currentIndex}"]`);
+        if (newActive) {
+            newActive.classList.add('active');
+            const indexEl = newActive.querySelector('.track-index');
+            
+            // Show playing icon or index depending on isPlaying state? 
+            // The original code showed icon only if isPlaying & active.
+            // But usually, an active track shows an icon (maybe paused state) or number.
+            // Let's stick to original behavior: Show icon if active.
+            
+            const playingIcon = `<svg class="track-playing-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+            
+            // If we want to show a "pause" icon in the list when paused, we could do that too.
+            // For now, let's just show the play icon if it's the current track, 
+            // matching the previous logic: `isPlaying && index === currentIndex ? playingIcon : index + 1`
+            // Actually, the previous logic only showed the icon if `isPlaying` was true.
+            
+            if (isPlaying) {
+                if (indexEl) indexEl.innerHTML = playingIcon;
+            } else {
+                 // If paused but active, maybe just keep the number or a different style?
+                 // The original code fell back to `index + 1` if !isPlaying.
+                 if (indexEl) indexEl.textContent = currentIndex + 1;
+            }
+        }
+    }
+}
 
 
 function renderPlaylist() {
@@ -331,6 +377,7 @@ function renderPlaylist() {
     playlist.forEach((track, index) => {
         const row = document.createElement('div');
         row.className = 'track-row';
+        row.dataset.index = index; // Essential for delegation and efficient updates
         if (index === currentIndex) row.classList.add('active');
 
         const playingIcon = `<svg class="track-playing-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
@@ -339,8 +386,11 @@ function renderPlaylist() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x-circle"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
             </button>` : '';
 
+        // Only render the icon if playing AND active. Otherwise index.
+        const indexDisplay = (isPlaying && index === currentIndex) ? playingIcon : (index + 1);
+
         row.innerHTML = `
-            <div class="track-index">${isPlaying && index === currentIndex ? playingIcon : index + 1}</div>
+            <div class="track-index">${indexDisplay}</div>
             <div class="track-info-block">
                 <div class="track-title-small">${track.title}</div>
                 <div class="track-artist-small">${track.artist || tr('unknownArtist')}</div>
@@ -349,12 +399,7 @@ function renderPlaylist() {
             ${deleteButtonHtml}
         `;
 
-        row.addEventListener('click', () => playTrack(index));
-        row.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            showContextMenu(e, index);
-        });
-
+        // Removed individual event listeners for performance
         fragment.appendChild(row);
     });
 
@@ -1321,12 +1366,36 @@ function setupEventListeners() {
         renderPlaylist(); // Re-render to show/hide delete icons
     });
 
+    // Delegated CLICK listener for Playlist
     bind(playlistEl, 'click', (e) => {
+        // 1. Handle Delete Button
         const deleteButton = e.target.closest('.delete-track-btn');
         if (deleteButton) {
-            e.stopPropagation(); // Prevent click from bubbling up to the track row
+            e.stopPropagation(); 
             const filePath = deleteButton.dataset.path;
             handleDeleteTrack(filePath);
+            return;
+        }
+
+        // 2. Handle Track Click
+        const row = e.target.closest('.track-row');
+        if (row) {
+            const index = parseInt(row.dataset.index, 10);
+            if (!isNaN(index)) {
+                playTrack(index);
+            }
+        }
+    });
+
+    // Delegated CONTEXTMENU listener for Playlist
+    bind(playlistEl, 'contextmenu', (e) => {
+        const row = e.target.closest('.track-row');
+        if (row) {
+            e.preventDefault();
+            const index = parseInt(row.dataset.index, 10);
+            if (!isNaN(index)) {
+                showContextMenu(e, index);
+            }
         }
     });
 
@@ -1407,6 +1476,9 @@ function setupEventListeners() {
     bind(confirmDeleteBtn, 'click', async () => {
         if (!trackToDeletePath) return;
         
+        // Capture currently playing track path BEFORE modification
+        const currentTrackPath = (currentIndex !== -1 && playlist[currentIndex]) ? playlist[currentIndex].path : null;
+
         const result = await window.api.deleteTrack(trackToDeletePath);
         
         if (result.success) {
@@ -1414,20 +1486,17 @@ function setupEventListeners() {
             basePlaylist = basePlaylist.filter(t => t.path !== trackToDeletePath);
             playlist = playlist.filter(t => t.path !== trackToDeletePath);
             
-            // Adjust currentIndex if the deleted track was before the current one
-            if (currentIndex !== -1 && playlist[currentIndex] && playlist[currentIndex].path === trackToDeletePath) {
-                // If the currently playing track was deleted, stop playback
-                audio.pause();
-                currentIndex = -1; // Reset current index
-            } else if (currentIndex !== -1 && basePlaylist.length > 0) {
-                // Adjust index for remaining tracks
-                currentIndex = playlist.findIndex(t => t.path === audio.src.replace('file:///', ''));
-                if (currentIndex === -1) { // If currently playing track is no longer in the playlist
-                    audio.pause();
-                }
-            } else {
-                audio.pause();
-                currentIndex = -1;
+            if (currentTrackPath) {
+                 if (trackToDeletePath === currentTrackPath) {
+                     // Deleted the playing track
+                     audio.pause();
+                     currentIndex = -1;
+                     audio.src = '';
+                     updatePlayPauseUI();
+                 } else {
+                     // Find new index of the track that was playing
+                     currentIndex = playlist.findIndex(t => t.path === currentTrackPath);
+                 }
             }
             
             renderPlaylist();
