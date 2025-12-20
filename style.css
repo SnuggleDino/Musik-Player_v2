@@ -1,4 +1,4 @@
-/* style.css - v2.2 */
+﻿/* style.css - v2.2 */
 
 /* =========================================
    THEME & FARBEN
@@ -239,7 +239,7 @@ input, textarea { user-select: text; }
     font-size: 1.1rem; 
     font-weight: 600; 
     letter-spacing: 0.5px; 
-    color: var(--text-main); /* Sicherstellen, dass der Titel weiß/hell ist */
+    color: var(--text-main); /* Sicherstellen, dass der Titel weiÃŸ/hell ist */
 }
 .app-title-text p { font-size: 0.75rem; color: var(--text-muted); }
 
@@ -274,14 +274,14 @@ input, textarea { user-select: text; }
   gap: 24px;
   padding: 24px;
   overflow: hidden;
-  min-height: 0; /* Verhindert, dass das Grid überläuft */
+  min-height: 0; /* Verhindert, dass das Grid Ã¼berlÃ¤uft */
 }
 
 .player-column, .extras-column {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  overflow: hidden; /* Verhindert, dass die Spalten ihren Inhalt überlaufen lassen */
+  overflow: hidden; /* Verhindert, dass die Spalten ihren Inhalt Ã¼berlaufen lassen */
 }
 
 .player-column {
@@ -344,14 +344,14 @@ input, textarea { user-select: text; }
     margin-bottom: 4px;
     white-space: nowrap; 
     display: block;
-    width: max-content; /* Nimmt die tatsächliche Textbreite an */
+    width: max-content; /* Nimmt die tatsÃ¤chliche Textbreite an */
     padding: 0 20px;
     will-change: transform;
     text-align: center;
 }
 
 .track-title-large.animating {
-    align-self: flex-start; /* Springt an den linken Rand für den Scroll-Start */
+    align-self: flex-start; /* Springt an den linken Rand fÃ¼r den Scroll-Start */
     text-align: left;
     animation: title-scroll 12s ease-in-out infinite alternate;
 }
@@ -973,7 +973,7 @@ input:checked + .slider:before { transform: translateX(16px); }
    ========================================= */
 
 #edit-title-overlay .settings-modal {
-    max-width: 800px; /* Noch breiter für optimale Lesbarkeit */
+    max-width: 800px; /* Noch breiter fÃ¼r optimale Lesbarkeit */
 }
 
 .edit-preview-box {
@@ -1004,7 +1004,7 @@ input:checked + .slider:before { transform: translateX(16px); }
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-main);
-    word-break: break-all; /* Erlaubt Umbrüche bei extrem langen Wörtern */
+    word-break: break-all; /* Erlaubt UmbrÃ¼che bei extrem langen WÃ¶rtern */
     display: block;
 }
 
@@ -1118,3 +1118,65 @@ input:checked + .slider:before { transform: translateX(16px); }
   /* Allow clicking buttons in draggable header */
   .app-header button { -webkit-app-region: no-drag; }
 }
+/* ================= NOTIFICATION BAR ================= */
+.notification-bar {
+    position: fixed;
+    bottom: 30px;
+    left: -400px; /* Hidden off-screen left */
+    background: var(--bg-card);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 12px 20px;
+    box-shadow: var(--shadow-soft);
+    z-index: 10000;
+    transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    min-width: 250px;
+}
+
+.notification-bar.visible {
+    left: 30px;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.notification-timer {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    transform: rotate(-90deg);
+}
+
+.timer-bg {
+    fill: none;
+    stroke: var(--accent-soft);
+    stroke-width: 3;
+}
+
+.timer-progress {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 62.83; /* 2 * PI * r (r=10) */
+    stroke-dashoffset: 62.83;
+}
+
+.notification-bar.visible .timer-progress {
+    animation: notification-progress 5s linear forwards;
+}
+
+@keyframes notification-progress {
+    from { stroke-dashoffset: 62.83; }
+    to { stroke-dashoffset: 0; }
+}
+

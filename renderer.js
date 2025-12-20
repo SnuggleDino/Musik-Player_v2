@@ -25,7 +25,7 @@ let visualizerDataArray;
 let visualizerRunning = false;
 
 // DOM Elements
-let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, openLibraryBtn, libraryOverlay, libraryCloseBtn, refreshFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloaderOverlay, downloaderCloseBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationSelect, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDeleteSongs, toggleDownloaderBtn, contextMenu, contextMenuEditTitle, editTitleOverlay, editTitleInput, originalTitlePreview, newTitlePreview, editTitleCancelBtn, editTitleSaveBtn, confirmDeleteOverlay, confirmDeleteBtn, confirmDeleteCancelBtn, autoLoadLastFolderToggle, toggleMiniMode;
+let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, openLibraryBtn, libraryOverlay, libraryCloseBtn, refreshFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloaderOverlay, downloaderCloseBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationSelect, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDeleteSongs, toggleDownloaderBtn, contextMenu, contextMenuEditTitle, editTitleOverlay, editTitleInput, originalTitlePreview, newTitlePreview, editTitleCancelBtn, editTitleSaveBtn, confirmDeleteOverlay, confirmDeleteBtn, confirmDeleteCancelBtn, autoLoadLastFolderToggle, toggleMiniMode, notificationBar, notificationMessage, notificationTimeout;
 
 let trackToDeletePath = null;
 let renderPlaylistRequestId = null;
@@ -84,6 +84,8 @@ const translations = {
         saveBtn: 'Speichern', cancelBtn: 'Abbrechen',
         loadFolderDesc: 'Wählen Sie das Hauptverzeichnis Ihrer Musiksammlung.',
         refreshFolderDesc: 'Sollten neue Dateien im Ordner sein, aktualisieren Sie hier die Liste.',
+        titleUpdated: 'Titel erfolgreich geändert!',
+        songDeleted: 'Song erfolgreich gelöscht!',
     },
     en: {
         appTitle: 'NovaWave - Music Player', appSubtitle: 'Local & YouTube',
@@ -134,6 +136,8 @@ const translations = {
         saveBtn: 'Save', cancelBtn: 'Cancel',
         loadFolderDesc: 'Select the main directory of your music collection.',
         refreshFolderDesc: 'If there are new files in the folder, refresh the list here.',
+        titleUpdated: 'Title successfully changed!',
+        songDeleted: 'Song successfully deleted!',
     }
 };
 
@@ -312,7 +316,7 @@ function updateTrackTitleScroll() {
         const titleText = trackTitleEl.textContent || "";
         const isMiniMode = window.innerWidth < 450;
 
-        if (textWidth > containerWidth || (isMiniMode && titleText.length > 15)) {
+        if (textWidth > containerWidth || (isMiniMode && titleText.length > 20)) {
             const scrollDist = (textWidth - containerWidth + 40) * -1;
             trackTitleEl.style.setProperty('--scroll-dist', `${scrollDist}px`);
             trackTitleEl.classList.add('animating');
@@ -752,6 +756,7 @@ function setupEventListeners() {
             if (bt) bt.title = nt;
             renderPlaylist(); updateUIForCurrentTrack();
             editTitleOverlay.classList.remove('visible');
+            showNotification(tr('titleUpdated'));
         }
     });
     
@@ -769,6 +774,7 @@ function setupEventListeners() {
             }
             renderPlaylist(); updateUIForCurrentTrack();
             confirmDeleteOverlay.classList.remove('visible'); trackToDeletePath = null;
+            showNotification(tr('songDeleted'));
         }
     });
     
@@ -778,6 +784,23 @@ function setupEventListeners() {
         }
     }).observe(visualizerContainer);
     window.addEventListener('resize', updateTrackTitleScroll);
+}
+
+function showNotification(msg) {
+    if (!notificationBar || !notificationMessage) return;
+    if (notificationTimeout) clearTimeout(notificationTimeout);
+    
+    notificationMessage.textContent = msg;
+    notificationBar.classList.remove('visible');
+    
+    // Trigger reflow to restart animation
+    void notificationBar.offsetWidth;
+    
+    notificationBar.classList.add('visible');
+    
+    notificationTimeout = setTimeout(() => {
+        notificationBar.classList.remove('visible');
+    }, 5000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -804,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
     newTitlePreview = $('#new-title-preview'); editTitleCancelBtn = $('#edit-title-cancel-btn'); editTitleSaveBtn = $('#edit-title-save-btn');
     confirmDeleteOverlay = $('#confirm-delete-overlay'); confirmDeleteBtn = $('#confirm-delete-btn'); confirmDeleteCancelBtn = $('#confirm-delete-cancel-btn');
     autoLoadLastFolderToggle = $('#toggle-auto-load-last-folder'); toggleMiniMode = $('#toggle-mini-mode');
+    notificationBar = $('#notification-bar'); notificationMessage = $('#notification-message');
 
     // Close Modals on Overlay Click
     const overlays = [settingsOverlay, libraryOverlay, downloaderOverlay, editTitleOverlay, confirmDeleteOverlay];
