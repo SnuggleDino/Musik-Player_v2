@@ -22,8 +22,8 @@
             </div>
             <div class="header-right">
                 <div class="header-item">
-                    <div class="mini-mode-switch-container" title="Mini Player Mode">
-                        <span class="mini-mode-label">MINI</span>
+                    <div class="mini-mode-switch-container" data-lang-title="miniModeTitle">
+                        <span class="mini-mode-label" data-lang-key="miniLabel">MINI</span>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggle-mini-mode">
                             <span class="slider"></span>
@@ -122,7 +122,7 @@
         </main>
 
         <footer class="app-footer">
-            <div id="footer-left">v2.3</div>
+            <div id="footer-left">v2.4</div>
         </footer>
     </div>
     
@@ -161,7 +161,7 @@
             </div>
             <div class="settings-content">
                 <div class="settings-section">
-                    <h4 class="settings-section-title">YouTube Video to MP3</h4>
+                    <h4 class="settings-section-title" data-lang-key="downloaderSectionTitle">YouTube Video to MP3</h4>
                     <div class="setting-item" style="flex-direction: column; align-items: stretch; gap: 10px;">
                         <input type="text" id="yt-url-input" class="extras-input" data-lang-placeholder="urlPlaceholder">
                         <input type="text" id="yt-name-input" class="extras-input" data-lang-placeholder="renamePlaceholder">
@@ -237,6 +237,21 @@
                                 <input type="checkbox" id="toggle-visualizer">
                                 <span class="slider"></span>
                             </label>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="visualizerStyle"></strong>
+                            <p data-lang-key="visualizerStyleDescription"></p>
+                        </div>
+                        <div class="setting-control">
+                            <select id="visualizer-style-select" class="settings-select">
+                                <option value="bars" data-lang-key="visBars"></option>
+                                <option value="circle" data-lang-key="visCircle"></option>
+                                <option value="prism" data-lang-key="visPrism"></option>
+                                <option value="dinopulse" data-lang-key="visDino"></option>
+                                <option value="retro" data-lang-key="visRetro"></option>
+                            </select>
                         </div>
                     </div>
                     <div class="setting-item">
@@ -350,7 +365,7 @@
                         <p data-lang-key="editTitleDesc"></p>
                     </div>
                     <div class="setting-control" style="width: 100%;">
-                        <input type="text" id="edit-title-input" class="settings-input" placeholder="Titel eingeben...">
+                        <input type="text" id="edit-title-input" class="settings-input" data-lang-placeholder="editTitleInputPlaceholder" placeholder="Titel eingeben...">
                     </div>
                 </div>
                 

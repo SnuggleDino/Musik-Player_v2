@@ -61,6 +61,7 @@ async function main() {
             animationMode: 'flow',
             theme: 'blue',
             visualizerEnabled: true,
+            visualizerStyle: 'bars',
             coverEmoji: 'note',
             customCoverEmoji: '🎵',
             autoLoadLastFolder: true,
@@ -122,14 +123,6 @@ function registerIpcHandlers(store) {
         }
     });
 
-    ipcMain.handle('get-cover', async (event, filePath) => {
-        try {
-            const metadata = await mm.parseFile(filePath);
-            const cover = mm.selectCover(metadata.common.picture);
-            return cover ? `data:${cover.format};base64,${cover.data.toString('base64')}` : null;
-        } catch (error) { return null; }
-    });
-
     ipcMain.handle('update-title', async (event, filePath, newTitle) => {
         try {
             const success = NodeID3.update({ title: newTitle }, filePath);
@@ -173,7 +166,7 @@ function registerIpcHandlers(store) {
 async function processTracksInBatches(files, folderPath) {
     const validFiles = files.filter(file => SUPPORTED_EXTENSIONS.includes(path.extname(file).toLowerCase()));
     const tracks = [];
-    const batchSize = 10; 
+    const batchSize = 20; 
     for (let i = 0; i < validFiles.length; i += batchSize) {
         const batch = validFiles.slice(i, i + batchSize);
         const batchPromises = batch.map(async (file) => {
@@ -184,7 +177,7 @@ async function processTracksInBatches(files, folderPath) {
                 return {
                     path: filePath,
                     title: metadata.common.title || path.basename(filePath, path.extname(filePath)),
-                    artist: metadata.common.artist || 'Unbekannt',
+                    artist: metadata.common.artist || null,
                     duration: metadata.format.duration || 0,
                     mtime: stat.mtimeMs || 0,
                 };

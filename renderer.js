@@ -1,4 +1,4 @@
-// renderer.js - v2.3
+// renderer.js - v2.4
 // =================================================================================
 // STATE & GLOBALS
 // =================================================================================
@@ -18,6 +18,7 @@ let visualizerEnabled = true;
 let deleteSongsEnabled = false;
 let currentFolderPath = null;
 let contextTrackIndex = null;
+let currentVisualizerStyle = 'bars';
 
 // Visualizer State
 let audioContext, analyser, sourceNode;
@@ -25,7 +26,7 @@ let visualizerDataArray;
 let visualizerRunning = false;
 
 // DOM Elements
-let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, openLibraryBtn, libraryOverlay, libraryCloseBtn, refreshFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloaderOverlay, downloaderCloseBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, animationSelect, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDeleteSongs, toggleDownloaderBtn, contextMenu, contextMenuEditTitle, editTitleOverlay, editTitleInput, originalTitlePreview, newTitlePreview, editTitleCancelBtn, editTitleSaveBtn, confirmDeleteOverlay, confirmDeleteBtn, confirmDeleteCancelBtn, autoLoadLastFolderToggle, toggleMiniMode, notificationBar, notificationMessage, notificationTimeout;
+let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, openLibraryBtn, libraryOverlay, libraryCloseBtn, refreshFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloaderOverlay, downloaderCloseBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, visualizerStyleSelect, animationSelect, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDeleteSongs, toggleDownloaderBtn, contextMenu, contextMenuEditTitle, editTitleOverlay, editTitleInput, originalTitlePreview, newTitlePreview, editTitleCancelBtn, editTitleSaveBtn, confirmDeleteOverlay, confirmDeleteBtn, confirmDeleteCancelBtn, autoLoadLastFolderToggle, toggleMiniMode, notificationBar, notificationMessage, notificationTimeout;
 
 let trackToDeletePath = null;
 let renderPlaylistRequestId = null;
@@ -58,6 +59,13 @@ const translations = {
         confirmDeleteButton: 'Ja, löschen',
         cancelDeleteButton: 'Abbrechen',
         theme: 'Design', visualizer: 'Visualizer', sortBy: 'Sortieren nach',
+        visualizerStyle: 'Visualizer Stil',
+        visualizerStyleDescription: 'Wähle einen visuellen Effekt für den Player.',
+        visBars: 'Balken (Classic)',
+        visCircle: 'Energie-Ring',
+        visPrism: 'Prisma-Wellen',
+        visDino: 'Dino-Retro-Jump',
+        visRetro: 'Retro-Pixel',
         sortNewest: 'Zuletzt geändert', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
         sectionAppearance: 'Erscheinungsbild',
         themeDescription: 'Passe das Aussehen und die Farbgebung der App an.',
@@ -86,6 +94,10 @@ const translations = {
         refreshFolderDesc: 'Sollten neue Dateien im Ordner sein, aktualisieren Sie hier die Liste.',
         titleUpdated: 'Titel erfolgreich geändert!',
         songDeleted: 'Song erfolgreich gelöscht!',
+        downloaderSectionTitle: 'YouTube Video zu MP3',
+        editTitleInputPlaceholder: 'Titel eingeben...',
+        miniLabel: 'MINI',
+        miniModeTitle: 'Mini-Player Modus',
     },
     en: {
         appTitle: 'NovaWave - Music Player', appSubtitle: 'Local & YouTube',
@@ -110,6 +122,13 @@ const translations = {
         confirmDeleteButton: 'Yes, Delete',
         cancelDeleteButton: 'Cancel',
         theme: 'Theme', visualizer: 'Visualizer', sortBy: 'Sort By',
+        visualizerStyle: 'Visualizer Style',
+        visualizerStyleDescription: 'Choose a visual effect for the player.',
+        visBars: 'Bars (Classic)',
+        visCircle: 'Energy Ring',
+        visPrism: 'Prism Waves',
+        visDino: 'Dino-Retro-Jump',
+        visRetro: 'Retro Pixels',
         sortNewest: 'Recently Modified', sortNameAZ: 'Name A-Z', sortNameZA: 'Name Z-A',
         sectionAppearance: 'Appearance',
         themeDescription: 'Customize the look and feel of the application.',
@@ -138,6 +157,10 @@ const translations = {
         refreshFolderDesc: 'If there are new files in the folder, refresh the list here.',
         titleUpdated: 'Title successfully changed!',
         songDeleted: 'Song successfully deleted!',
+        downloaderSectionTitle: 'YouTube Video to MP3',
+        editTitleInputPlaceholder: 'Enter title...',
+        miniLabel: 'MINI',
+        miniModeTitle: 'Mini Player Mode',
     }
 };
 
@@ -386,20 +409,144 @@ function drawVisualizer() {
     if (!visualizerRunning || !isPlaying || !visualizerEnabled) { visualizerRunning = false; return; }
     requestAnimationFrame(drawVisualizer);
     if (!visualizerDataArray) return;
-    analyser.getByteFrequencyData(visualizerDataArray);
+    
     const ctx = visualizerCanvas.getContext('2d');
     const { width, height } = visualizerCanvas;
     ctx.clearRect(0, 0, width, height);
-    const bl = analyser.frequencyBinCount, hb = bl / 2, bw = (width / hb) / 2;
-    let x = 0;
+    
     const ac = getComputedStyle(document.documentElement).getPropertyValue('--accent');
-    for (let i = 0; i < hb; i++) {
-        const bh = (visualizerDataArray[i] / 255) * height * 0.9;
+    analyser.getByteFrequencyData(visualizerDataArray);
+
+    if (currentVisualizerStyle === 'bars') {
+        const bl = analyser.frequencyBinCount, hb = bl / 2, bw = (width / hb) / 2;
+        let x = 0;
+        for (let i = 0; i < hb; i++) {
+            const bh = (visualizerDataArray[i] / 255) * height * 0.9;
+            ctx.fillStyle = ac;
+            ctx.fillRect(width / 2 + x, height - bh, bw, bh);
+            ctx.fillRect(width / 2 - x - bw, height - bh, bw, bh);
+            x += bw + 1;
+        }
+    } else if (currentVisualizerStyle === 'circle') {
+        const centerX = width / 2, centerY = height / 2;
+        const radius = Math.min(width, height) / 3;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.strokeStyle = `${ac}44`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        for (let i = 0; i < visualizerDataArray.length; i += 4) {
+            const bh = (visualizerDataArray[i] / 255) * radius * 0.6;
+            const angle = (i / visualizerDataArray.length) * (Math.PI * 2);
+            const x1 = centerX + Math.cos(angle) * radius;
+            const y1 = centerY + Math.sin(angle) * radius;
+            const x2 = centerX + Math.cos(angle) * (radius + bh);
+            const y2 = centerY + Math.sin(angle) * (radius + bh);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = ac;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+    } else if (currentVisualizerStyle === 'prism') {
+        const blv = (visualizerDataArray[0] + visualizerDataArray[4]) / 2;
+        const amplitude = (blv / 255) * (height / 2.2);
+        ctx.strokeStyle = ac;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        
+        const time = Date.now() * 0.0015;
+        
+        for (let j = 0; j < 3; j++) {
+            ctx.beginPath();
+            ctx.globalAlpha = 0.5 - (j * 0.15);
+            
+            const startY = height / 2;
+            ctx.moveTo(0, startY);
+
+            for (let i = 0; i <= width; i += 20) {
+                const fadeArea = width * 0.2;
+                const edgeFade = Math.min(i / fadeArea, (width - i) / fadeArea, 1);
+                const x = i;
+                const y = startY + Math.sin((i * 0.005) + time + (j * 0.8)) * (amplitude + (j * 15)) * edgeFade;
+                const cp1x = x - 10;
+                const cp1y = y;
+                ctx.quadraticCurveTo(cp1x, cp1y, x, y);
+            }
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1.0;
+    } else if (currentVisualizerStyle === 'dinopulse') {
+        const blv = (visualizerDataArray[0] + visualizerDataArray[1] + visualizerDataArray[2]) / 3;
+        const bass = blv / 255;
+        const centerX = width / 2;
+        
+        // Bodenlinie & Balken
+        const bars = 32, bw = width / bars;
+        ctx.fillStyle = `${ac}22`;
+        ctx.fillRect(0, height - 20, width, 2); 
+
+        for(let i=0; i<bars; i++) {
+            const h = (visualizerDataArray[i*4] / 255) * (height * 0.4);
+            ctx.fillStyle = `${ac}33`;
+            ctx.fillRect(i*bw, height - h, bw-2, h);
+        }
+
+        // Boden-Partikel
+        const speedTime = (Date.now() * 0.005) % 1;
+        for(let i=0; i<5; i++) {
+            const px = ((i * 0.2 + speedTime) % 1) * width;
+            ctx.fillStyle = ac;
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(px, height - 15, 10, 2);
+        }
+
+        // Kaktus
+        const obstacleTime = (Date.now() * 0.0004) % 1;
+        const ox = width - (obstacleTime * (width + 100));
+        const oy = height - 45;
+        ctx.globalAlpha = 1.0;
         ctx.fillStyle = ac;
-        ctx.fillRect(width / 2 + x, height - bh, bw, bh);
-        ctx.fillRect(width / 2 - x - bw, height - bh, bw, bh);
-        x += bw + 1;
+        ctx.fillRect(ox, oy, 6, 25); 
+        ctx.fillRect(ox - 6, oy + 8, 6, 4); 
+        ctx.fillRect(ox - 6, oy + 4, 3, 4);
+        ctx.fillRect(ox + 6, oy + 5, 6, 4); 
+        ctx.fillRect(ox + 9, oy + 1, 3, 4);
+
+        // Dino
+        const dx = centerX - 40;
+        const jumpHeight = Math.max(0, (bass > 0.6 ? (bass - 0.6) * 200 : 0));
+        const dy = height - 55 - jumpHeight;
+        
+        ctx.fillStyle = ac;
+        ctx.fillRect(dx, dy, 25, 15);
+        ctx.fillRect(dx + 18, dy - 12, 15, 12);
+        ctx.fillRect(dx - 8, dy, 8, 8);
+        ctx.fillStyle = 'black';
+        ctx.fillRect(dx + 28, dy - 9, 3, 3);
+        ctx.fillStyle = ac;
+        const isJumping = jumpHeight > 5;
+        const legPhase = isJumping ? 0 : (Date.now() * 0.015) % (Math.PI * 2);
+        const leg1H = 8 + Math.sin(legPhase) * 6;
+        const leg2H = 8 + Math.cos(legPhase) * 6;
+        ctx.fillRect(dx + 5, dy + 15, 4, leg1H);
+        ctx.fillRect(dx + 15, dy + 15, 4, leg2H);
+        ctx.fillRect(dx + 30, dy - 5, 6, 5);
+    } else if (currentVisualizerStyle === 'retro') {
+        const bars = 20, bw = width / bars;
+        const blocks = 10, bh = height / blocks;
+        for (let i = 0; i < bars; i++) {
+            const val = Math.floor((visualizerDataArray[i * 4] / 255) * blocks);
+            for (let j = 0; j < val; j++) {
+                ctx.fillStyle = (j > blocks * 0.7) ? '#ff4444' : ac;
+                ctx.fillRect(i * bw + 2, height - (j * bh) - bh + 2, bw - 4, bh - 4);
+            }
+        }
     }
+
     if (musicEmojiEl && !isNaN(audio.currentTime)) {
         const blv = (visualizerDataArray[0] + visualizerDataArray[1]) / 2;
         const fy = Math.sin(audio.currentTime * 2) * 10;
@@ -466,6 +613,10 @@ async function loadSettings() {
     if (visualizerToggle) {
         visualizerToggle.checked = settings.visualizerEnabled !== false;
         visualizerEnabled = settings.visualizerEnabled !== false;
+    }
+    if (visualizerStyleSelect) {
+        currentVisualizerStyle = settings.visualizerStyle || 'bars';
+        visualizerStyleSelect.value = currentVisualizerStyle;
     }
     if (toggleDeleteSongs) {
         toggleDeleteSongs.checked = settings.deleteSongsEnabled || false;
@@ -692,6 +843,11 @@ function setupEventListeners() {
         if (visualizerEnabled) startVisualizer(); else stopVisualizer();
     });
     
+    bind(visualizerStyleSelect, 'change', (e) => {
+        currentVisualizerStyle = e.target.value;
+        window.api.setSetting('visualizerStyle', currentVisualizerStyle);
+    });
+    
     bind(animationSelect, 'change', (e) => {
         const m = e.target.value;
         window.api.setSetting('animationMode', m);
@@ -820,6 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
     langButtons = document.querySelectorAll('.lang-btn'); settingsBtn = $('#settings-btn'); settingsOverlay = $('#settings-overlay');
     settingsCloseBtn = $('#settings-close-btn'); downloadFolderInput = $('#default-download-folder'); changeFolderBtn = $('#change-download-folder-btn');
     qualitySelect = $('#audio-quality-select'); themeSelect = $('#theme-select'); visualizerToggle = $('#toggle-visualizer');
+    visualizerStyleSelect = $('#visualizer-style-select');
     animationSelect = $('#animation-select'); backgroundAnimationEl = $('.background-animation'); emojiSelect = $('#emoji-select');
     customEmojiContainer = $('#custom-emoji-container'); customEmojiInput = $('#custom-emoji-input'); toggleDeleteSongs = $('#toggle-delete-songs');
     toggleDownloaderBtn = $('#toggle-downloader-btn'); contextMenu = $('#context-menu'); contextMenuEditTitle = $('#context-menu-edit-title');

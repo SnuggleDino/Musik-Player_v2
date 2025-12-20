@@ -4,7 +4,6 @@ contextBridge.exposeInMainWorld('api', {
     // --- Musik & Player ---
     selectMusicFolder: () => ipcRenderer.invoke('select-music-folder'),
     refreshMusicFolder: (folderPath) => ipcRenderer.invoke('refresh-music-folder', folderPath),
-    getCover: (filePath) => ipcRenderer.invoke('get-cover', filePath),
     updateTitle: (filePath, newTitle) => ipcRenderer.invoke('update-title', filePath, newTitle),
     deleteTrack: (filePath) => ipcRenderer.invoke('delete-track', filePath),
 
