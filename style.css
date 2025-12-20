@@ -216,7 +216,8 @@ input, textarea { user-select: text; }
   display: flex;
   flex-direction: column;
   height: 100vh;
-  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
 }
 
 .app-header {
@@ -232,7 +233,12 @@ input, textarea { user-select: text; }
 
 .app-title-block { display: flex; align-items: center; gap: 12px; }
 .logo-icon { width: 32px; height: 32px; }
-.app-title-text h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.5px; }
+.app-title-text h1 { 
+    font-size: 1.1rem; 
+    font-weight: 600; 
+    letter-spacing: 0.5px; 
+    color: var(--text-main); /* Sicherstellen, dass der Titel weiß/hell ist */
+}
 .app-title-text p { font-size: 0.75rem; color: var(--text-muted); }
 
 .header-right { 
@@ -321,12 +327,39 @@ input, textarea { user-select: text; }
   transition: transform 0.1s ease-out;
 }
 
-.track-info-area { text-align: center; margin-top: 20px;}
-.track-title-large { 
-    font-size: 1.6rem; font-weight: 700; color: var(--text-main); margin-bottom: 4px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;
+.track-info-area { 
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Standard: Zentriert */
+    width: 100%;
+    overflow: hidden;
+    margin-top: 20px;
 }
-.track-artist-large { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+.track-title-large { 
+    font-size: 1.6rem; 
+    font-weight: 700; 
+    color: var(--text-main); 
+    margin-bottom: 4px;
+    white-space: nowrap; 
+    display: block;
+    width: max-content; /* Nimmt die tatsächliche Textbreite an */
+    padding: 0 20px;
+    will-change: transform;
+    text-align: center;
+}
+
+.track-title-large.animating {
+    align-self: flex-start; /* Springt an den linken Rand für den Scroll-Start */
+    text-align: left;
+    animation: title-scroll 12s ease-in-out infinite alternate;
+}
+
+@keyframes title-scroll {
+    0%, 20% { transform: translateX(0); }
+    80%, 100% { transform: translateX(var(--scroll-dist)); }
+}
+
+.track-artist-large { font-size: 1rem; color: var(--text-muted); font-weight: 400; text-align: center; width: 100%; }
 
 .visualizer-container {
   height: 80px; width: 100%;
@@ -529,7 +562,7 @@ input[type=range].volume-slider::-moz-range-thumb {
     gap: 10px;
 }
 
-#settings-close-btn {
+.close-modal-btn, #settings-close-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
@@ -539,52 +572,79 @@ input[type=range].volume-slider::-moz-range-thumb {
     transition: color 0.2s, transform 0.2s;
 }
 
-#settings-close-btn:hover {
+.close-modal-btn:hover, #settings-close-btn:hover {
     color: var(--text-main);
     transform: rotate(90deg);
 }
 
 .settings-content {
-    padding: 30px;
+    padding: 25px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 35px;
+    gap: 30px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.settings-section {
+    background: var(--bg-card-light);
+    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .settings-section-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-soft);
-    margin: 0;
+    letter-spacing: 1.5px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .setting-item {
-    display: grid;
-    grid-template-columns: 1fr 250px;
-    gap: 25px;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    gap: 20px;
+}
+
+.setting-label {
+    flex: 1;
 }
 
 .setting-label strong {
     display: block;
     font-size: 0.95rem;
-    font-weight: 500;
-    margin-bottom: 4px;
+    font-weight: 600;
+    margin-bottom: 2px;
 }
 
 .setting-label p {
     font-size: 0.8rem;
     color: var(--text-muted);
+    line-height: 1.4;
 }
 
 .setting-control {
+    flex-shrink: 0;
+    min-width: 180px;
     display: flex;
     justify-content: flex-end;
+}
+
+/* Specific button style for settings */
+.settings-button {
+    padding: 8px 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    font-size: 0.8rem;
 }
 
 /* New Input Styles */
@@ -907,6 +967,53 @@ input:checked + .slider:before { transform: translateX(16px); }
 }
 
 /* =========================================
+   EDIT TITLE OVERLAY SPECIFIC
+   ========================================= */
+
+#edit-title-overlay .settings-modal {
+    max-width: 800px; /* Noch breiter für optimale Lesbarkeit */
+}
+
+.edit-preview-box {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+    border: 1px solid var(--border-soft);
+}
+
+.edit-preview-item {
+    margin-bottom: 10px;
+}
+
+.edit-preview-item:last-child {
+    margin-bottom: 0;
+}
+
+.edit-preview-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.edit-preview-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    word-break: break-all; /* Erlaubt Umbrüche bei extrem langen Wörtern */
+    display: block;
+}
+
+#edit-title-input {
+    font-size: 1.1rem;
+    padding: 12px 16px;
+    border-color: var(--accent);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* =========================================
    LIGHT THEME READABILITY FIX
    ========================================= */
 
@@ -993,9 +1100,9 @@ input:checked + .slider:before { transform: translateX(16px); }
   .music-emoji { font-size: 60px; }
   
   /* Compact Text */
-  .track-info-area { margin-top: 10px; }
-  .track-title-large { font-size: 1.1rem; margin-bottom: 2px; }
-  .track-artist-large { font-size: 0.8rem; }
+  .track-info-area { margin-top: 10px; display: flex; }
+  .track-title-large { font-size: 1.1rem; margin-bottom: 2px; display: block; }
+  .track-artist-large { font-size: 0.8rem; display: block; }
   
   /* Compact Controls */
   .visualizer-container { height: 30px; margin: 10px 0; }

@@ -1,7 +1,7 @@
 {
-  "name": "novawave-music-player",
-  "version": "2.2",
-  "description": "NovaWave – Lokale Musik + Downloader",
+  "name": "novawave",
+  "version": "2.3.0",
+  "description": "Modern Electron Music Player",
   "main": "main.js",
   "author": "SnuggleDino",
   "license": "MIT",
