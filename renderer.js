@@ -363,8 +363,13 @@ function updateAnalyserSettings() {
 }
 
 function drawVisualizer() {
-    if (!visualizerRunning || !isPlaying || !visualizerEnabled || !analyser || !visualizerDataArray) { 
-        visualizerRunning = false; return; 
+    if (!visualizerRunning || !isPlaying || !visualizerEnabled || !analyser || !visualizerDataArray || document.hidden) { 
+        if (visualizerRunning && !document.hidden) {
+            // Only stop if explicitly disabled or paused
+            if (!visualizerEnabled || !isPlaying) visualizerRunning = false;
+        }
+        if (visualizerRunning) requestAnimationFrame(drawVisualizer); // Keep loop alive but idle if just hidden
+        return; 
     }
     requestAnimationFrame(drawVisualizer);
     const ctx = visualizerCanvas.getContext('2d'); const { width, height } = visualizerCanvas; ctx.clearRect(0, 0, width, height);
@@ -426,9 +431,10 @@ function drawVisualizer() {
 function setupAudioEvents() {
     audio.addEventListener('timeupdate', () => { if (!isNaN(audio.duration)) { const p = (audio.currentTime / audio.duration) * 100; if (progressFill) progressFill.style.width = `${p}%`; if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime); }});
     audio.addEventListener('durationchange', () => { if (durationEl) durationEl.textContent = isNaN(audio.duration) ? '0:00' : formatTime(audio.duration); });
-    audio.addEventListener('play', () => { isPlaying = true; updatePlayPauseUI(); updateUIForCurrentTrack(); startVisualizer(); window.api.sendPlaybackState(true); });
-    audio.addEventListener('pause', () => { isPlaying = false; updatePlayPauseUI(); stopVisualizer(); window.api.sendPlaybackState(false); });
+    audio.addEventListener('play', () => { isPlaying = true; updatePlayPauseUI(); updateUIForCurrentTrack(); startVisualizer(); if (window.api.sendPlaybackState) window.api.sendPlaybackState(true); });
+    audio.addEventListener('pause', () => { isPlaying = false; updatePlayPauseUI(); stopVisualizer(); if (window.api.sendPlaybackState) window.api.sendPlaybackState(false); });
     audio.addEventListener('ended', () => { stopVisualizer(); if (loopMode === 'one') { audio.currentTime = 0; audio.play(); } else playNext(); });
+    audio.addEventListener('error', (e) => { console.error("Audio playback error:", e); showNotification(tr('statusError')); isPlaying = false; updatePlayPauseUI(); });
     audio.addEventListener('volumechange', () => { currentVolume = audio.volume; if (volumeSlider) volumeSlider.value = currentVolume; if (volumeIcon) volumeIcon.innerHTML = getVolumeIcon(currentVolume); clearTimeout(window.volumeSaveTimeout); window.volumeSaveTimeout = setTimeout(() => { window.api.setSetting('volume', currentVolume); }, 500); });
 }
 
@@ -669,8 +675,8 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmDeleteCloseBtn = $('#confirm-delete-close-btn');
     autoLoadLastFolderToggle = $('#toggle-auto-load-last-folder'); toggleMiniMode = $('#toggle-mini-mode');
     notificationBar = $('#notification-bar'); notificationMessage = $('#notification-message');
-    accentColorPicker = $('#accent-color-picker'); toggleFocusModeBtn = $('#toggle-focus-mode');
-    dropZone = $('#drop-zone'); toggleEnableFocus = $('#toggle-enable-focus'); toggleEnableDrag = $('#toggle-enable-drag'); toggleUseCustomColor = $('#toggle-use-custom-color');
+    accentColorPicker = $('#accent-color-picker');
+    dropZone = $('#drop-zone'); toggleEnableDrag = $('#toggle-enable-drag'); toggleUseCustomColor = $('#toggle-use-custom-color');
     accentColorContainer = $('#accent-color-container');
     speedSlider = $('#speed-slider'); speedValue = $('#speed-value');
 
