@@ -544,6 +544,14 @@ input[type=range].volume-slider::-moz-range-thumb {
   background: rgba(0,0,0,0.2); border: 1px solid var(--border-soft);
   border-radius: 6px; padding: 6px 10px; color: var(--text-main); font-size: 0.8rem; outline: none;
   cursor: pointer;
+  transition: border-color 0.2s;
+}
+.playlist-sort-select option {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+}
+.playlist-sort-select:hover {
+  border-color: var(--accent);
 }
 .playlist-info-bar { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; }
 
