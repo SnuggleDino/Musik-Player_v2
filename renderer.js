@@ -23,7 +23,7 @@ let sleepTimerId = null;
 let lastNotifiedPath = null;
 
 // Visualizer State
-let audioContext, analyser, sourceNode;
+let audioContext, analyser, sourceNode, bassFilter, trebleFilter, reverbNode, reverbGain;
 let visualizerDataArray;
 let visualizerRunning = false;
 
@@ -31,6 +31,10 @@ let visualizerRunning = false;
 let $, trackTitleEl, trackArtistEl, musicEmojiEl, currentTimeEl, durationEl, progressBar, progressFill, playBtn, playIcon, pauseIcon, prevBtn, nextBtn, loopBtn, shuffleBtn, volumeSlider, volumeIcon, playlistEl, playlistInfoBar, loadFolderBtn, openLibraryBtn, libraryOverlay, libraryCloseBtn, refreshFolderBtn, searchInput, sortSelect, ytUrlInput, ytNameInput, downloadBtn, downloaderOverlay, downloaderCloseBtn, downloadStatusEl, downloadProgressFill, visualizerCanvas, visualizerContainer, langButtons, settingsBtn, settingsOverlay, settingsCloseBtn, downloadFolderInput, changeFolderBtn, qualitySelect, themeSelect, visualizerToggle, visualizerStyleSelect, visualizerSensitivity, sleepTimerSelect, animationSelect, backgroundAnimationEl, emojiSelect, customEmojiContainer, customEmojiInput, toggleDeleteSongs, toggleDownloaderBtn, contextMenu, contextMenuEditTitle, editTitleOverlay, editTitleInput, originalTitlePreview, newTitlePreview, editTitleCancelBtn, editTitleSaveBtn, editTitleCloseBtn, confirmDeleteOverlay, confirmDeleteBtn, confirmDeleteCancelBtn, confirmDeleteCloseBtn, autoLoadLastFolderToggle, toggleMiniMode, notificationBar, notificationMessage, notificationTimeout, accentColorPicker, toggleFocusModeBtn, dropZone, toggleEnableFocus, toggleEnableDrag, toggleUseCustomColor, accentColorContainer, speedSlider, speedValue, snowInterval;
 
 let trackToDeletePath = null;
+let bassBoostToggle, bassBoostSlider, bassBoostValueEl, bassBoostContainer;
+let trebleBoostToggle, trebleBoostSlider, trebleBoostValueEl, trebleBoostContainer;
+let reverbToggle, reverbSlider, reverbValueEl, reverbContainer;
+let toggleCinemaMode, btnExportPlaylist;
 let renderPlaylistRequestId = null;
 
 // =================================================================================
@@ -52,7 +56,7 @@ const translations = {
         changeButton: 'Ändern', audioQuality: 'Audioqualität (Download)', qualityBest: 'Beste',
         qualityHigh: 'Hoch (192k)', qualityStandard: 'Standard (128k)',
         backgroundAnimation: 'Hintergrundanimation',
-        blueTheme: 'Blue', darkTheme: 'Dark', lightTheme: 'Light', blurpleTheme: 'Purple', greyTheme: 'Grey', darkroseTheme: 'Rose', dinoloveTheme: 'Dino', xmasTheme: 'Christmas',
+        themeBlue: 'Standard Blau', themeDark: 'Mitternachts-Lila', themeLight: 'Hellblau', themePurple: 'Blurple', themeGrey: 'Schiefergrau', themeRose: 'Tiefrot', themeDino: 'Dino Grün', themeXmas: 'Weihnachten',
         shuffle: 'Zufallswiedergabe', previous: 'Zurück', playPause: 'Abspielen/Pause',
         next: 'Weiter', loop: 'Wiederholen', settings: 'Einstellungen', close: 'Schließen',
         toggleDownloader: 'Downloader umschalten', deleteSong: 'Song löschen',
@@ -127,6 +131,12 @@ const translations = {
         showInFolder: 'Im Ordner anzeigen',
         sleepTimerNotify: (m) => `Sleep Timer aktiviert: ${m} Minuten`,
         sleepTimerStopped: 'Sleep Timer: Musik gestoppt.',
+        bassBoost: 'Bass Boost', bassBoostDesc: 'Verstärke die tiefen Frequenzen.', bassBoostLevel: 'Intensität',
+        trebleBoost: 'Crystalizer', trebleBoostDesc: 'Verstärke die Höhen für mehr Klarheit.', trebleBoostLevel: 'Intensität',
+        reverb: 'Reverb', reverbDesc: 'Räumlicher Hall-Effekt.', reverbLevel: 'Mix',
+        sectionAudioExtras: 'Audio-Extras', sectionExtras: 'Extras & Tools',
+        cinemaMode: 'Kino-Modus', cinemaModeDesc: 'Dimmt die Benutzeroberfläche für mehr Fokus.',
+        exportPlaylist: 'Playlist exportieren', exportPlaylistDesc: 'Speichere die aktuelle Liste als Textdatei.',
     },
     en: {
         appTitle: 'NovaWave - Music Player', appSubtitle: 'Local & YouTube',
@@ -142,7 +152,7 @@ const translations = {
         changeButton: 'Change', audioQuality: 'Audio Quality (Download)', qualityBest: 'Best',
         qualityHigh: 'High (192k)', qualityStandard: 'Standard (128k)',
         backgroundAnimation: 'Background Animation',
-        blueTheme: 'Blue', darkTheme: 'Dark', lightTheme: 'Light', blurpleTheme: 'Purple', greyTheme: 'Grey', darkroseTheme: 'Rose', dinoloveTheme: 'Dino', xmasTheme: 'Christmas',
+        themeBlue: 'Standard Blue', themeDark: 'Midnight Purple', themeLight: 'Light Blue', themePurple: 'Blurple', themeGrey: 'Slate Grey', themeRose: 'Deep Rose', themeDino: 'Dino Green', themeXmas: 'Christmas',
         shuffle: 'Shuffle', previous: 'Previous', playPause: 'Play/Pause',
         next: 'Next', loop: 'Loop', settings: 'Settings', close: 'Close',
         toggleDownloader: 'Toggle Downloader', deleteSong: 'Delete Song',
@@ -174,6 +184,12 @@ const translations = {
         enableFocusOptionDesc: 'Toggle the visibility of the focus mode button on the visualizer.',
         enableDragOption: 'Enable Drag & Drop',
         enableDragOptionDesc: 'Allows adding music by dragging files into the window.',
+        bassBoost: 'Bass Boost', bassBoostDesc: 'Enhance low frequencies.', bassBoostLevel: 'Intensity',
+        trebleBoost: 'Crystalizer', trebleBoostDesc: 'Enhance highs for clarity.', trebleBoostLevel: 'Intensity',
+        reverb: 'Reverb', reverbDesc: 'Spatial reverb effect.', reverbLevel: 'Mix',
+        sectionAudioExtras: 'Audio Extras', sectionExtras: 'Extras & Tools',
+        cinemaMode: 'Cinema Mode', cinemaModeDesc: 'Dims the UI for better focus.',
+        exportPlaylist: 'Export Playlist', exportPlaylistDesc: 'Save current list as a text file.',
         useCustomColorOption: 'Use Custom Accent Color',
         useCustomColorOptionDesc: 'Apply your selected color or use theme defaults.',
         coverEmoji: 'Cover Emoji',
@@ -355,10 +371,85 @@ function setupVisualizer() {
     if (audioContext) return;
     try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        sourceNode = audioContext.createMediaElementSource(audio); analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256; updateAnalyserSettings(); sourceNode.connect(analyser); analyser.connect(audioContext.destination);
+        sourceNode = audioContext.createMediaElementSource(audio); 
+        analyser = audioContext.createAnalyser();
+        
+        // Filters
+        bassFilter = audioContext.createBiquadFilter();
+        bassFilter.type = 'lowshelf';
+        bassFilter.frequency.value = 120;
+        bassFilter.gain.value = 0;
+
+        trebleFilter = audioContext.createBiquadFilter();
+        trebleFilter.type = 'highshelf';
+        trebleFilter.frequency.value = 3000;
+        trebleFilter.gain.value = 0;
+
+        // Reverb
+        reverbNode = audioContext.createConvolver();
+        reverbNode.buffer = createReverbBuffer(2.0); // 2 seconds tail
+        reverbGain = audioContext.createGain();
+        reverbGain.gain.value = 0;
+
+        analyser.fftSize = 256; 
+        updateAnalyserSettings(); 
+        
+        // Graph: Source -> Bass -> Treble
+        sourceNode.connect(bassFilter);
+        bassFilter.connect(trebleFilter);
+
+        // Treble -> Analyser (Dry Signal)
+        trebleFilter.connect(analyser);
+
+        // Treble -> Reverb -> ReverbGain -> Analyser (Wet Signal)
+        trebleFilter.connect(reverbNode);
+        reverbNode.connect(reverbGain);
+        reverbGain.connect(analyser);
+
+        analyser.connect(audioContext.destination);
+        
         visualizerDataArray = new Uint8Array(analyser.frequencyBinCount);
+        updateAudioEffects();
     } catch (e) { console.error("Visualizer error:", e); visualizerEnabled = false; }
+}
+
+function createReverbBuffer(duration) {
+    const rate = audioContext.sampleRate;
+    const len = rate * duration;
+    const buffer = audioContext.createBuffer(2, len, rate);
+    for (let c = 0; c < 2; c++) {
+        const channel = buffer.getChannelData(c);
+        for (let i = 0; i < len; i++) {
+            // Noise with exponential decay
+            channel[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+        }
+    }
+    return buffer;
+}
+
+function updateAudioEffects() {
+    if (!audioContext) return;
+    const t = audioContext.currentTime;
+
+    // Bass
+    if (bassFilter) {
+        const bg = settings.bassBoostEnabled ? (parseFloat(settings.bassBoostValue) || 6) : 0;
+        bassFilter.gain.setTargetAtTime(bg, t, 0.1);
+    }
+
+    // Treble
+    if (trebleFilter) {
+        const tg = settings.trebleBoostEnabled ? (parseFloat(settings.trebleBoostValue) || 6) : 0;
+        trebleFilter.gain.setTargetAtTime(tg, t, 0.1);
+    }
+
+    // Reverb
+    if (reverbGain) {
+        // Linear mapping: 0-100% -> 0.0 - 1.0 gain (maybe dampen it a bit, max 1.5)
+        const val = parseFloat(settings.reverbValue) || 30;
+        const rg = settings.reverbEnabled ? (val / 100) : 0;
+        reverbGain.gain.setTargetAtTime(rg, t, 0.1);
+    }
 }
 
 function startVisualizer() { if (!audioContext || visualizerRunning || !visualizerEnabled || !isPlaying) return; if (audioContext.state === 'suspended') audioContext.resume(); visualizerRunning = true; drawVisualizer(); }
@@ -470,6 +561,48 @@ async function loadSettings() {
     if (emojiSelect) emojiSelect.value = et; if (customEmojiInput) customEmojiInput.value = ce;
     if (customEmojiContainer) customEmojiContainer.style.display = et === 'custom' ? 'flex' : 'none';
     updateEmoji(et, ce);
+    
+    // Load Bass Boost
+    if (bassBoostToggle) {
+        bassBoostToggle.checked = settings.bassBoostEnabled || false;
+        if (bassBoostContainer) bassBoostContainer.style.display = settings.bassBoostEnabled ? 'flex' : 'none';
+    }
+    if (bassBoostSlider) {
+        const boostVal = settings.bassBoostValue !== undefined ? settings.bassBoostValue : 6;
+        bassBoostSlider.value = boostVal;
+        if (bassBoostValueEl) bassBoostValueEl.textContent = boostVal + 'dB';
+    }
+    
+    // Load Treble Boost
+    if (trebleBoostToggle) {
+        trebleBoostToggle.checked = settings.trebleBoostEnabled || false;
+        if (trebleBoostContainer) trebleBoostContainer.style.display = settings.trebleBoostEnabled ? 'flex' : 'none';
+    }
+    if (trebleBoostSlider) {
+        const tVal = settings.trebleBoostValue !== undefined ? settings.trebleBoostValue : 6;
+        trebleBoostSlider.value = tVal;
+        if (trebleBoostValueEl) trebleBoostValueEl.textContent = tVal + 'dB';
+    }
+
+    // Load Reverb
+    if (reverbToggle) {
+        reverbToggle.checked = settings.reverbEnabled || false;
+        if (reverbContainer) reverbContainer.style.display = settings.reverbEnabled ? 'flex' : 'none';
+    }
+    if (reverbSlider) {
+        const rVal = settings.reverbValue !== undefined ? settings.reverbValue : 30;
+        reverbSlider.value = rVal;
+        if (reverbValueEl) reverbValueEl.textContent = rVal + '%';
+    }
+    
+    // Load Cinema Mode
+    if (toggleCinemaMode) {
+        toggleCinemaMode.checked = settings.cinemaMode || false;
+        document.body.classList.toggle('cinema-mode', settings.cinemaMode || false);
+    }
+
+    updateAudioEffects();
+
     if (speedSlider) { const sp = settings.playbackSpeed || 1.0; speedSlider.value = sp; audio.playbackRate = sp; if(speedValue) speedValue.textContent = sp.toFixed(1) + 'x'; }
     if (settings.currentFolderPath && (settings.autoLoadLastFolder !== false)) { currentFolderPath = settings.currentFolderPath; try { const result = await window.api.refreshMusicFolder(currentFolderPath); if (result && result.tracks) { basePlaylist = result.tracks; sortPlaylist(sortMode); updateUIForCurrentTrack(); } } catch (e) { console.error(e); } }
     if (shuffleBtn) shuffleBtn.classList.toggle('mode-btn--active', shuffleOn);
@@ -606,6 +739,13 @@ function setupEventListeners() {
     bind(visualizerToggle, 'change', (e) => { visualizerEnabled = e.target.checked; window.api.setSetting('visualizerEnabled', visualizerEnabled); if (visualizerEnabled) startVisualizer(); else stopVisualizer(); });
     bind(visualizerStyleSelect, 'change', (e) => { currentVisualizerStyle = e.target.value; window.api.setSetting('visualizerStyle', currentVisualizerStyle); });
     bind(visualizerSensitivity, 'input', (e) => { visSensitivity = parseFloat(e.target.value); updateAnalyserSettings(); window.api.setSetting('visSensitivity', visSensitivity); });
+    bind($('#visualizer-sensitivity-reset-btn'), 'click', () => {
+        const def = 1.5;
+        if (visualizerSensitivity) visualizerSensitivity.value = def;
+        visSensitivity = def;
+        updateAnalyserSettings();
+        window.api.setSetting('visSensitivity', def);
+    });
     bind(sleepTimerSelect, 'change', (e) => { const mins = parseInt(e.target.value); if (sleepTimerId) { clearTimeout(sleepTimerId); sleepTimerId = null; } if (mins > 0) { sleepTimerId = setTimeout(() => { audio.pause(); isPlaying = false; updatePlayPauseUI(); showNotification(tr('sleepTimerStopped')); sleepTimerSelect.value = "0"; sleepTimerId = null; }, mins * 60000); showNotification(tr('sleepTimerNotify', mins)); } });
     bind(animationSelect, 'change', (e) => { const m = e.target.value; window.api.setSetting('animationMode', m).catch(console.error); applyAnimationSetting(m); });
     bind(autoLoadLastFolderToggle, 'change', (e) => { window.api.setSetting('autoLoadLastFolder', e.target.checked); if (e.target.checked && currentFolderPath) window.api.setSetting('currentFolderPath', currentFolderPath); });
@@ -625,6 +765,76 @@ function setupEventListeners() {
         audio.playbackRate = def;
         if (speedValue) speedValue.textContent = def.toFixed(1) + 'x';
         window.api.setSetting('playbackSpeed', def);
+    });
+
+    // Bass Boost Listeners
+    bind(bassBoostToggle, 'change', (e) => {
+        const enabled = e.target.checked;
+        settings.bassBoostEnabled = enabled;
+        window.api.setSetting('bassBoostEnabled', enabled);
+        if (bassBoostContainer) bassBoostContainer.style.display = enabled ? 'flex' : 'none';
+        updateAudioEffects();
+    });
+    bind(bassBoostSlider, 'input', (e) => {
+        const val = parseFloat(e.target.value);
+        settings.bassBoostValue = val;
+        window.api.setSetting('bassBoostValue', val);
+        if (bassBoostValueEl) bassBoostValueEl.textContent = val + 'dB';
+        updateAudioEffects();
+    });
+    
+    // Treble Boost Listeners
+    bind(trebleBoostToggle, 'change', (e) => {
+        const enabled = e.target.checked;
+        settings.trebleBoostEnabled = enabled;
+        window.api.setSetting('trebleBoostEnabled', enabled);
+        if (trebleBoostContainer) trebleBoostContainer.style.display = enabled ? 'flex' : 'none';
+        updateAudioEffects();
+    });
+    bind(trebleBoostSlider, 'input', (e) => {
+        const val = parseFloat(e.target.value);
+        settings.trebleBoostValue = val;
+        window.api.setSetting('trebleBoostValue', val);
+        if (trebleBoostValueEl) trebleBoostValueEl.textContent = val + 'dB';
+        updateAudioEffects();
+    });
+
+    // Reverb Listeners
+    bind(reverbToggle, 'change', (e) => {
+        const enabled = e.target.checked;
+        settings.reverbEnabled = enabled;
+        window.api.setSetting('reverbEnabled', enabled);
+        if (reverbContainer) reverbContainer.style.display = enabled ? 'flex' : 'none';
+        updateAudioEffects();
+    });
+    bind(reverbSlider, 'input', (e) => {
+        const val = parseFloat(e.target.value);
+        settings.reverbValue = val;
+        window.api.setSetting('reverbValue', val);
+        if (reverbValueEl) reverbValueEl.textContent = val + '%';
+        updateAudioEffects();
+    });
+
+    // Cinema Mode
+    bind(toggleCinemaMode, 'change', (e) => {
+        const enabled = e.target.checked;
+        settings.cinemaMode = enabled;
+        window.api.setSetting('cinemaMode', enabled);
+        document.body.classList.toggle('cinema-mode', enabled);
+    });
+
+    // Export Playlist
+    bind(btnExportPlaylist, 'click', () => {
+        if (!playlist || playlist.length === 0) { showNotification(tr('emptyPlaylist')); return; }
+        const content = playlist.map((t, i) => `${i+1}. ${t.artist || 'Unknown'} - ${t.title}`).join('\n');
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'playlist_export.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+        showNotification('Playlist exportiert!');
     });
     bind(toggleUseCustomColor, 'change', (e) => {
         window.api.setSetting('useCustomColor', e.target.checked);
@@ -699,6 +909,24 @@ document.addEventListener('DOMContentLoaded', () => {
     dropZone = $('#drop-zone'); toggleEnableDrag = $('#toggle-enable-drag'); toggleUseCustomColor = $('#toggle-use-custom-color');
     accentColorContainer = $('#accent-color-container');
     speedSlider = $('#speed-slider'); speedValue = $('#speed-value');
+    
+    bassBoostToggle = $('#toggle-bass-boost');
+    bassBoostSlider = $('#bass-boost-slider');
+    bassBoostValueEl = $('#bass-boost-value');
+    bassBoostContainer = $('#bass-boost-slider-container');
+    
+    trebleBoostToggle = $('#toggle-treble-boost');
+    trebleBoostSlider = $('#treble-boost-slider');
+    trebleBoostValueEl = $('#treble-boost-value');
+    trebleBoostContainer = $('#treble-boost-slider-container');
+    
+    reverbToggle = $('#toggle-reverb');
+    reverbSlider = $('#reverb-slider');
+    reverbValueEl = $('#reverb-value');
+    reverbContainer = $('#reverb-slider-container');
+    
+    toggleCinemaMode = $('#toggle-cinema-mode');
+    btnExportPlaylist = $('#btn-export-playlist');
 
     const overlays = [settingsOverlay, libraryOverlay, downloaderOverlay, editTitleOverlay, confirmDeleteOverlay];
     overlays.forEach(ov => { if (ov) ov.addEventListener('click', (e) => { if (e.target === ov) ov.classList.remove('visible'); }); });

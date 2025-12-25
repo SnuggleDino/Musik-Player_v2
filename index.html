@@ -214,15 +214,27 @@
                         </div>
                         <div class="setting-control">
                             <select id="theme-select" class="settings-select">
-                                <option value="blue">Blue</option>
-                                <option value="dark">Dark</option>
-                                <option value="light">Light</option>
-                                <option value="blurple">Purple</option>
-                                <option value="grey">Grey</option>
-                                <option value="darkrose">Rose</option>
-                                <option value="dinolove">Dino</option>
-                                <option value="xmas">Christmas</option>
+                                <option value="blue" data-lang-key="themeBlue">Blue</option>
+                                <option value="dark" data-lang-key="themeDark">Dark</option>
+                                <option value="light" data-lang-key="themeLight">Light</option>
+                                <option value="blurple" data-lang-key="themePurple">Purple</option>
+                                <option value="grey" data-lang-key="themeGrey">Grey</option>
+                                <option value="darkrose" data-lang-key="themeRose">Rose</option>
+                                <option value="dinolove" data-lang-key="themeDino">Dino</option>
+                                <option value="xmas" data-lang-key="themeXmas">Christmas</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="useCustomColorOption"></strong>
+                            <p data-lang-key="useCustomColorOptionDesc"></p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-use-custom-color">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
                     <div class="setting-item" id="accent-color-container">
@@ -271,6 +283,19 @@
                     </div>
                     <div class="setting-item">
                         <div class="setting-label">
+                            <strong data-lang-key="playbackSpeed">Playback Speed</strong>
+                            <p data-lang-key="playbackSpeedDesc">Adjust playback rate (0.5x - 2.0x)</p>
+                        </div>
+                        <div class="setting-control">
+                             <div class="input-group">
+                                <span id="speed-value" style="font-size: 0.8rem; min-width: 30px;">1.0x</span>
+                                <input type="range" id="speed-slider" class="settings-range" min="0.5" max="2.0" step="0.1" value="1.0">
+                                <button id="speed-reset-btn" class="settings-button" style="padding: 4px 8px; margin-left: 5px;" title="Reset Speed">↺</button>
+                             </div>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">
                             <strong data-lang-key="visualizer"></strong>
                             <p data-lang-key="visualizerDescription"></p>
                         </div>
@@ -302,7 +327,10 @@
                             <p data-lang-key="visSensitivityDesc"></p>
                         </div>
                         <div class="setting-control">
-                            <input type="range" id="visualizer-sensitivity" class="settings-range" min="0.5" max="4" step="0.1" value="1.5">
+                            <div class="input-group">
+                                <input type="range" id="visualizer-sensitivity" class="settings-range" min="0.5" max="4" step="0.1" value="1.5">
+                                <button id="visualizer-sensitivity-reset-btn" class="settings-button" style="padding: 4px 8px; margin-left: 5px;" title="Reset Sensitivity">↺</button>
+                            </div>
                         </div>
                     </div>
                     <div class="setting-item">
@@ -393,21 +421,100 @@
                     </div>
                 </div>
 
-                <!-- Extras Section -->
+                <!-- Audio Extras Section -->
                 <div class="settings-section">
+                    <h4 class="settings-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> <span data-lang-key="sectionAudioExtras">Audio Extras</span></h4>
+                    
                     <div class="setting-item">
                         <div class="setting-label">
-                            <strong data-lang-key="playbackSpeed">Playback Speed</strong>
-                            <p data-lang-key="playbackSpeedDesc">Adjust playback rate (0.5x - 2.0x)</p>
+                            <strong data-lang-key="bassBoost">Bass Boost</strong>
+                            <p data-lang-key="bassBoostDesc">Verstärke die tiefen Frequenzen.</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-bass-boost">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="bass-boost-slider-container" style="display: none;">
+                        <div class="setting-label">
+                            <strong data-lang-key="bassBoostLevel">Bass Level</strong>
                         </div>
                         <div class="setting-control">
                              <div class="input-group">
-                                <span id="speed-value" style="font-size: 0.8rem; min-width: 30px;">1.0x</span>
-                                <input type="range" id="speed-slider" class="settings-range" min="0.5" max="2.0" step="0.1" value="1.0">
-                                <button id="speed-reset-btn" class="settings-button" style="padding: 4px 8px; margin-left: 5px;" title="Reset Speed">↺</button>
+                                <span id="bass-boost-value" style="font-size: 0.8rem; min-width: 30px;">6dB</span>
+                                <input type="range" id="bass-boost-slider" class="settings-range" min="0" max="15" step="1" value="6">
                              </div>
                         </div>
                     </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="trebleBoost">Crystalizer</strong>
+                            <p data-lang-key="trebleBoostDesc">Verleiht dem Klang mehr Klarheit.</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-treble-boost">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="treble-boost-slider-container" style="display: none;">
+                        <div class="setting-label">
+                            <strong data-lang-key="trebleBoostLevel">Treble Level</strong>
+                        </div>
+                        <div class="setting-control">
+                             <div class="input-group">
+                                <span id="treble-boost-value" style="font-size: 0.8rem; min-width: 30px;">6dB</span>
+                                <input type="range" id="treble-boost-slider" class="settings-range" min="0" max="15" step="1" value="6">
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="reverb">Reverb</strong>
+                            <p data-lang-key="reverbDesc">Fügt einen räumlichen Hall-Effekt hinzu.</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-reverb">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="setting-item" id="reverb-slider-container" style="display: none;">
+                        <div class="setting-label">
+                            <strong data-lang-key="reverbLevel">Mix</strong>
+                        </div>
+                        <div class="setting-control">
+                             <div class="input-group">
+                                <span id="reverb-value" style="font-size: 0.8rem; min-width: 30px;">30%</span>
+                                <input type="range" id="reverb-slider" class="settings-range" min="0" max="100" step="5" value="30">
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real Extras Section -->
+                <div class="settings-section">
+                    <h4 class="settings-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> <span data-lang-key="sectionExtras">Extras & Tools</span></h4>
+                    
+                    <div class="setting-item">
+                        <div class="setting-label">
+                            <strong data-lang-key="cinemaMode">Cinema Mode</strong>
+                            <p data-lang-key="cinemaModeDesc">Dimmt das Interface für puren Musikgenuss.</p>
+                        </div>
+                        <div class="setting-control">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="toggle-cinema-mode">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="setting-item">
                         <div class="setting-label">
                             <strong data-lang-key="enableDragOption"></strong>
@@ -420,16 +527,14 @@
                             </label>
                         </div>
                     </div>
+
                     <div class="setting-item">
                         <div class="setting-label">
-                            <strong data-lang-key="useCustomColorOption"></strong>
-                            <p data-lang-key="useCustomColorOptionDesc"></p>
+                            <strong data-lang-key="exportPlaylist">Playlist Export</strong>
+                            <p data-lang-key="exportPlaylistDesc">Speichere die aktuelle Playlist als Datei.</p>
                         </div>
                         <div class="setting-control">
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="toggle-use-custom-color">
-                                <span class="slider"></span>
-                            </label>
+                            <button id="btn-export-playlist" class="settings-button" data-lang-key="saveBtn">Speichern</button>
                         </div>
                     </div>
                 </div>

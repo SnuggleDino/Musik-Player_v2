@@ -850,9 +850,19 @@ input[type=range].volume-slider::-moz-range-thumb {
 }
 
 .settings-color-picker {
-    height: 40px;
-    padding: 2px;
+    height: 45px;
+    width: 80px;
+    min-width: 80px;
+    padding: 4px;
     cursor: pointer;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.settings-color-picker:hover {
+    transform: scale(1.05);
+    border-color: var(--accent);
 }
 
 /* =========================================
@@ -1541,3 +1551,37 @@ input:checked + .slider:before { transform: translateX(16px); }
     to { stroke-dashoffset: 0; }
 }
 
+
+/* =========================================
+   CINEMA MODE
+   ========================================= */
+
+body.cinema-mode .app-header,
+body.cinema-mode .playlist-panel,
+body.cinema-mode .controls-area,
+body.cinema-mode .volume-control-area,
+body.cinema-mode .extras-column,
+body.cinema-mode .app-footer,
+body.cinema-mode .track-info-area {
+    opacity: 0.1;
+    filter: blur(2px);
+    transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+body.cinema-mode:hover .app-header,
+body.cinema-mode:hover .playlist-panel,
+body.cinema-mode:hover .controls-area,
+body.cinema-mode:hover .volume-control-area,
+body.cinema-mode:hover .extras-column,
+body.cinema-mode:hover .app-footer,
+body.cinema-mode:hover .track-info-area {
+    opacity: 1;
+    filter: none;
+}
+
+body.cinema-mode .visualizer-container,
+body.cinema-mode .cover-art-container {
+    opacity: 1;
+    filter: none;
+    z-index: 10;
+}
