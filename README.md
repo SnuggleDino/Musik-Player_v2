@@ -73,7 +73,7 @@ git clone https://github.com/Refreryo/Musik-Player_v2
 
 **2. Navigate to Workspace**
 ```bash
-cd novawave
+cd (your_workspace or folder)
 ```
 
 **3. Initialize Engine (Install Dependencies)**
