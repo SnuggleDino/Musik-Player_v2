@@ -519,6 +519,11 @@ function updateActiveTrackInPlaylist() {
             newActive.classList.add('active');
             const indexEl = newActive.querySelector('.track-index');
             if (indexEl) { if (isPlaying) { indexEl.innerHTML = `<svg class="track-playing-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`; } else { indexEl.textContent = currentIndex + 1; } }
+            
+            // Auto-Scroll to active track
+            setTimeout(() => {
+                newActive.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
         }
     }
 }
