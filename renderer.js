@@ -5,6 +5,8 @@ let currentIndex = -1;
 let currentTrackPath = null;
 let isPlaying = false;
 let audio = new Audio();
+audio.crossOrigin = "anonymous";
+document.body.appendChild(audio);
 let currentVolume = 0.2;
 let shuffleOn = false;
 let loopMode = 'off'; // 'off', 'all', 'one'
@@ -51,6 +53,7 @@ let lastRenderTime = 0;
 let lastStatsTime = performance.now();
 let cachedAccentColor = '#38bdf8';
 let isStatsLoopRunning = false;
+let warmupFrames = 0;
 
 function updateCachedColor() {
     cachedAccentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#38bdf8';
@@ -82,7 +85,7 @@ function updatePerformanceStats() {
         frameCount = 0;
         lastFrameTime = now;
 
-        if (showStatsOverlay || avgFps < targetFps * 0.8) {
+        if (showStatsOverlay || (avgFps < targetFps * 0.8)) {
             const fpsEl = document.getElementById('stat-fps');
             const timeEl = document.getElementById('stat-time');
             const lagEl = document.getElementById('stat-lag');
@@ -103,7 +106,8 @@ function updatePerformanceStats() {
                 if (avgFps < targetFps * 0.5) {
                     lagEl.textContent = 'LAG';
                     lagEl.style.color = '#ef4444';
-                    triggerPerformanceHint();
+                    // Only trigger hint if warmed up
+                    if (warmupFrames > 300) triggerPerformanceHint();
                 } else if (avgFps < targetFps * 0.8) {
                     lagEl.textContent = tr('statUnstable');
                     lagEl.style.color = '#fbbf24';
@@ -122,6 +126,9 @@ function updatePerformanceStats() {
                 }
             }
         }
+        
+        // Increase warmup counter (approx 5 seconds at 60fps)
+        if (warmupFrames <= 300) warmupFrames++;
     }
     requestAnimationFrame(updatePerformanceStats);
 }
@@ -143,7 +150,7 @@ function triggerPerformanceHint(force = false) {
     }
 }
 
-function setPerformanceMode(enabled) {
+function setPerformanceMode(enabled, silent = false) {
     performanceMode = enabled;
     settings.performanceMode = enabled;
     window.api.setSetting('performanceMode', enabled);
@@ -155,7 +162,7 @@ function setPerformanceMode(enabled) {
         stopVisualizer();
         applyAnimationSetting('off');
         document.body.classList.add('perf-mode-active');
-        showNotification(tr('perfModeOn'));
+        if (!silent) showNotification(tr('perfModeOn'));
     } else {
         if (isPlaying) startVisualizer();
         applyAnimationSetting(settings.animationMode || 'flow');
@@ -292,7 +299,7 @@ const translations = {
         newBadge: 'NEU',
         devTitle: 'Entwickler & Hotkey-Info',
         devStandardHotkeys: 'Standard Hotkeys',
-        devDebugHotkeys: 'Debug & Entwickler (v2.5.3)',
+        devDebugHotkeys: 'Debug & Entwickler (v2.5.4)',
         devPlayPause: 'Abspielen / Pause',
         devNextSong: 'Nächster Song',
         devPrevSong: 'Vorheriger Song',
@@ -301,7 +308,7 @@ const translations = {
         devOpenMenu: 'Dieses Menü öffnen',
         devPerfHint: 'Performance-Hinweis (Island)',
         devWinSize: 'Fenstergröße Debug (Size)',
-        devFooter: 'NovaWave Entwicklerkonsole v2.5.3',
+        devFooter: 'NovaWave Entwicklerkonsole v2.5.4',
     },
     en: {
         appTitle: 'NovaWave - Music Player', appSubtitle: 'Local & YouTube',
@@ -386,7 +393,7 @@ const translations = {
         newBadge: 'NEW',
         devTitle: 'Developer & Hotkey Info',
         devStandardHotkeys: 'Standard Hotkeys',
-        devDebugHotkeys: 'Debug & Dev (v2.5.3)',
+        devDebugHotkeys: 'Debug & Dev (v2.5.4)',
         devPlayPause: 'Play / Pause',
         devNextSong: 'Next Track',
         devPrevSong: 'Previous Track',
@@ -395,7 +402,7 @@ const translations = {
         devOpenMenu: 'Open this menu',
         devPerfHint: 'Performance Hint (Island)',
         devWinSize: 'Window Size Debug (Size)',
-        devFooter: 'NovaWave Dev Console v2.5.3',
+        devFooter: 'NovaWave Dev Console v2.5.4',
         useCustomColorOption: 'Use Custom Accent Color',
         useCustomColorOptionDesc: 'Apply your selected color or use theme defaults.',
         coverEmoji: 'Cover Emoji',
@@ -459,7 +466,9 @@ function playTrack(index) {
     // FIX: Encode the path to handle special characters like '#' or '?' safely
     // Unified approach: split by backslash or forward slash, encode parts, join with forward slash
     const encodedPath = track.path.split(/[\\/]/).map(encodeURIComponent).join('/');
+    
     audio.src = `file:///${encodedPath}`;
+    
     const speed = speedSlider ? parseFloat(speedSlider.value) : 1.0;
     audio.defaultPlaybackRate = speed;
     audio.playbackRate = speed;
@@ -648,8 +657,6 @@ async function handleDownload() {
     downloadBtn.style.opacity = '0.5';
     downloadStatusEl.textContent = tr('statusStarting'); 
     
-    if (downloadProgressFill) downloadProgressFill.style.width = '0%';
-    
     try {
         const result = await window.api.downloadFromYouTube({ url, customName: ytNameInput.value.trim(), quality: qualitySelect.value });
         if (result.success) { 
@@ -776,7 +783,19 @@ function updateAudioEffects() {
 }
 
 function startVisualizer() { 
-    if (!audioContext || !visualizerEnabled || !isPlaying) return; 
+    if (!visualizerEnabled || !isPlaying) return; 
+    
+    if (!audioContext) {
+        setupVisualizer();
+        if (!audioContext) return; // Failed to setup
+    }
+
+    // Force resize to ensure canvas has dimensions
+    if (visualizerContainer && visualizerCanvas) {
+        visualizerCanvas.width = visualizerContainer.clientWidth;
+        visualizerCanvas.height = visualizerContainer.clientHeight;
+    }
+
     if (visualizerRunning) return;
 
     if (audioContext.state === 'suspended') {
@@ -907,6 +926,13 @@ function applySnuggleTime(enabled) {
     
     if (enabled) {
         document.documentElement.setAttribute('data-theme', 'dinolove');
+        
+        // Force Visualizer ON for Snuggle Mode
+        visualizerEnabled = true;
+        if (visualizerToggle) visualizerToggle.checked = true;
+        window.api.setSetting('visualizerEnabled', true);
+        if (isPlaying) startVisualizer();
+
         currentVisualizerStyle = 'retro';
         if (visualizerStyleSelect) visualizerStyleSelect.value = 'retro';
         applyAnimationSetting('xmas');
@@ -1053,7 +1079,7 @@ async function loadSettings() {
     performanceMode = settings.performanceMode || false;
     const pmToggle = document.getElementById('toggle-performance-mode');
     if (pmToggle) pmToggle.checked = performanceMode;
-    if (performanceMode) setPerformanceMode(true);
+    if (performanceMode) setPerformanceMode(true, true);
 
     // Load Stats Overlay
     showStatsOverlay = settings.showStatsOverlay || false;
@@ -1302,26 +1328,18 @@ function setupEventListeners() {
         const key = e.key.toLowerCase();
         pressedKeys.add(key);
 
-        // Hotkey: CTRL + 1 (Dev Info)
-        if (pressedKeys.has('control') && pressedKeys.has('1') && pressedKeys.size === 2) {
-            e.preventDefault();
-            const devModal = document.getElementById('dev-modal-overlay');
-            // Nur öffnen, wenn es nicht bereits sichtbar ist
-            if (devModal && !devModal.classList.contains('visible')) {
-                devModal.classList.add('visible');
-            }
-            return;
-        }
+        const isCtrl = pressedKeys.has('control');
+        const isOne = pressedKeys.has('1');
 
-        // Hotkey: CTRL + 1 + X
-        if (pressedKeys.has('control') && pressedKeys.has('1') && pressedKeys.has('x')) {
+        // Hotkey: CTRL + 1 + X (Performance Hint)
+        if (isCtrl && isOne && pressedKeys.has('x')) {
             e.preventDefault();
             triggerPerformanceHint(true);
             return;
         }
 
         // Hotkey: CTRL + 1 + H (Debug Size)
-        if (pressedKeys.has('control') && pressedKeys.has('1') && pressedKeys.has('h')) {
+        if (isCtrl && isOne && pressedKeys.has('h')) {
             e.preventDefault();
             const debugEl = document.getElementById('debug-size-item');
             const statsOverlay = document.getElementById('stats-overlay');
@@ -1331,7 +1349,22 @@ function setupEventListeners() {
                 if (isHidden) {
                     statsOverlay.classList.remove('hidden');
                     updateDebugSize();
+                } else {
+                    // Only hide overlay if global setting is off
+                    if (!showStatsOverlay) {
+                        statsOverlay.classList.add('hidden');
+                    }
                 }
+            }
+            return;
+        }
+
+        // Hotkey: CTRL + 1 (Dev Info) - Strict check to avoid triggering when typing 3rd key
+        if (isCtrl && isOne && pressedKeys.size === 2) {
+            e.preventDefault();
+            const devModal = document.getElementById('dev-modal-overlay');
+            if (devModal && !devModal.classList.contains('visible')) {
+                devModal.classList.add('visible');
             }
             return;
         }
@@ -1365,7 +1398,7 @@ function setupEventListeners() {
         const isMini = e.target.checked;
         if (isMini) {
             document.body.classList.add('is-mini');
-            window.api.setWindowSize(340, 520); 
+            window.api.setWindowSize(340, 600); 
         } else {
             document.body.classList.remove('is-mini');
             window.api.setWindowSize(1300, 900); 
@@ -1379,10 +1412,9 @@ function setupEventListeners() {
     bind(downloadBtn, 'click', handleDownload);
     window.api.onMediaControl((a) => { if (a === 'play-pause') { if (isPlaying) audio.pause(); else audio.play(); } else if (a === 'next') playNext(); else if (a === 'previous') playPrev(); });
     window.api.onDownloadProgress((d) => { 
-        if (d && (typeof d.percent === 'number' || typeof d.percent === 'string') && downloadProgressFill) { 
+        if (d && (typeof d.percent === 'number' || typeof d.percent === 'string')) { 
             const p = parseFloat(d.percent);
             if (!isNaN(p)) {
-                downloadProgressFill.style.width = `${p}%`; 
                 downloadStatusEl.textContent = tr('statusProgress', p.toFixed(1)); 
             }
         } 
@@ -1694,7 +1726,6 @@ function setupEventListeners() {
         if (ytUrlInput) ytUrlInput.value = '';
         if (ytNameInput) ytNameInput.value = '';
         if (downloadStatusEl) downloadStatusEl.textContent = tr('statusReady');
-        if (downloadProgressFill) downloadProgressFill.style.width = '0%';
         if (downloadBtn) {
             downloadBtn.disabled = false;
             downloadBtn.style.opacity = '1';
@@ -1850,6 +1881,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dev Modal Elements
     const devModalOverlay = $('#dev-modal-overlay');
     const devModalCloseBtn = $('#dev-modal-close-btn');
+    
+    if (devModalCloseBtn && devModalOverlay) {
+        devModalCloseBtn.addEventListener('click', () => devModalOverlay.classList.remove('visible'));
+    }
 
     // User Help Modal Elements
     const userHelpOverlay = $('#user-help-overlay');
@@ -1997,6 +2032,7 @@ document.addEventListener('DOMContentLoaded', () => {
             audio.volume = currentVolume; 
             if (volumeSlider) volumeSlider.value = currentVolume; 
             if (volumeIcon) volumeIcon.innerHTML = getVolumeIcon(currentVolume);
+
 
             // Final check to ensure the Snuggle Time emoji is set after all track updates
             if (settings.snuggleTimeEnabled) {

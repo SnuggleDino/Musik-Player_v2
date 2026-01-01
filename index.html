@@ -196,7 +196,7 @@
         </main>
 
         <footer class="app-footer">
-            <div id="footer-left">v2.5.3</div>
+            <div id="footer-left">v2.5.4</div>
         </footer>
     </div>
     
@@ -234,19 +234,27 @@
                 <button id="downloader-close-btn" class="close-modal-btn" data-lang-title="close">&times;</button>
             </div>
             <div class="settings-content">
-                <div class="settings-section">
+                <div class="settings-section downloader-section">
                     <h4 class="settings-section-title" data-lang-key="downloaderSectionTitle">YouTube Video to MP3</h4>
-                    <div class="setting-item" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                        <input type="text" id="yt-url-input" class="extras-input" data-lang-placeholder="urlPlaceholder">
-                        <input type="text" id="yt-name-input" class="extras-input" data-lang-placeholder="renamePlaceholder">
-                    </div>
-                    <div class="setting-item">
-                        <div class="setting-label">
-                            <p class="status-text" data-lang-key="statusReady"></p>
-                            <div class="yt-progress-bar"><div class="yt-progress-fill"></div></div>
+                    
+                    <div class="downloader-input-group">
+                        <div class="input-wrapper">
+                            <label class="input-label" data-lang-key="urlPlaceholder">YouTube URL</label>
+                            <input type="text" id="yt-url-input" class="settings-input" data-lang-placeholder="urlPlaceholder">
                         </div>
-                        <div class="setting-control">
-                            <button id="download-btn" class="settings-button primary-btn" data-lang-key="downloadButton"></button>
+                        <div class="input-wrapper">
+                            <label class="input-label" data-lang-key="renamePlaceholder">Dateiname (optional)</label>
+                            <input type="text" id="yt-name-input" class="settings-input" data-lang-placeholder="renamePlaceholder">
+                        </div>
+                    </div>
+
+                    <div class="downloader-controls">
+                        <button id="download-btn" class="settings-button primary-btn download-main-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span data-lang-key="downloadButton">Download</span>
+                        </button>
+                        <div class="status-container">
+                            <p class="status-text" data-lang-key="statusReady">Bereit.</p>
                         </div>
                     </div>
                 </div>
@@ -841,7 +849,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     <span data-lang-key="helpOpenSettings">Öffne die Einstellungen hier</span>
                 </div>
-                <p style="font-size: 0.9rem; color: var(--accent); text-align: center; font-weight: 600; margin-top: 10px;">NovaWave v2.5.3 • Enjoy your Snuggle-Time</p>
+                <p style="font-size: 0.9rem; color: var(--accent); text-align: center; font-weight: 600; margin-top: 10px;">NovaWave v2.5.4 • Enjoy your Snuggle-Time</p>
             </div>
         </div>
     </div>
@@ -857,22 +865,46 @@
                 <div class="settings-section">
                     <h4 class="settings-section-title" data-lang-key="devStandardHotkeys">Standard Hotkeys</h4>
                     <div class="dev-hotkey-list">
-                        <div class="dev-hotkey-item"><span>Space</span> <span data-lang-key="devPlayPause">Play / Pause</span></div>
-                        <div class="dev-hotkey-item"><span>Arrow Right</span> <span data-lang-key="devNextSong">Nächster Song</span></div>
-                        <div class="dev-hotkey-item"><span>Arrow Left</span> <span data-lang-key="devPrevSong">Vorheriger Song</span></div>
-                        <div class="dev-hotkey-item"><span>Arrow Up/Down</span> <span data-lang-key="devVol">Lautstärke +/-</span></div>
-                        <div class="dev-hotkey-item"><span>Shift + Arrows</span> <span data-lang-key="devSkip">5 Sek. vor/zurück</span></div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>Space</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devPlayPause">Play / Pause</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>→</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devNextSong">Nächster Song</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>←</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devPrevSong">Vorheriger Song</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>↑</kbd> / <kbd>↓</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devVol">Lautstärke +/-</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>Shift</kbd> + <kbd>Arrows</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devSkip">5 Sek. vor/zurück</span>
+                        </div>
                     </div>
                 </div>
                 <div class="settings-section">
-                    <h4 class="settings-section-title" data-lang-key="devDebugHotkeys">Debug & Dev (v2.5.3)</h4>
+                    <h4 class="settings-section-title" data-lang-key="devDebugHotkeys">Debug & Dev (v2.5.4)</h4>
                     <div class="dev-hotkey-list">
-                        <div class="dev-hotkey-item"><span>STRG + 1</span> <span data-lang-key="devOpenMenu">Dieses Menü öffnen</span></div>
-                        <div class="dev-hotkey-item"><span>STRG + 1 + X</span> <span data-lang-key="devPerfHint">Performance Hint (Island)</span></div>
-                        <div class="dev-hotkey-item"><span>STRG + 1 + H</span> <span data-lang-key="devWinSize">Fenstergröße Debug (Size)</span></div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>STRG</kbd> + <kbd>1</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devOpenMenu">Dieses Menü öffnen</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>STRG</kbd> + <kbd>1</kbd> + <kbd>X</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devPerfHint">Performance Hint (Island)</span>
+                        </div>
+                        <div class="dev-hotkey-item">
+                            <div class="kbd-wrapper"><kbd>STRG</kbd> + <kbd>1</kbd> + <kbd>H</kbd></div>
+                            <span class="hotkey-desc" data-lang-key="devWinSize">Fenstergröße Debug (Size)</span>
+                        </div>
                     </div>
                 </div>
-                <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center;" data-lang-key="devFooter">NovaWave Dev Console v2.5.3</p>
+                <p style="font-size: 0.7rem; color: var(--text-muted); text-align: center; margin-top: 20px;" data-lang-key="devFooter">NovaWave Dev Console v2.5.4</p>
             </div>
         </div>
     </div>
