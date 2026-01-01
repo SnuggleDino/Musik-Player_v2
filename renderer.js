@@ -107,7 +107,7 @@ function updatePerformanceStats() {
                     lagEl.textContent = 'LAG';
                     lagEl.style.color = '#ef4444';
                     // Only trigger hint if warmed up
-                    if (warmupFrames > 300) triggerPerformanceHint();
+                    if (warmupFrames > 600) triggerPerformanceHint();
                 } else if (avgFps < targetFps * 0.8) {
                     lagEl.textContent = tr('statUnstable');
                     lagEl.style.color = '#fbbf24';
@@ -126,10 +126,11 @@ function updatePerformanceStats() {
                 }
             }
         }
-        
-        // Increase warmup counter (approx 5 seconds at 60fps)
-        if (warmupFrames <= 300) warmupFrames++;
     }
+    
+    // Increase warmup counter every frame (approx 10 seconds at 60fps)
+    if (warmupFrames <= 600) warmupFrames++;
+    
     requestAnimationFrame(updatePerformanceStats);
 }
 
@@ -142,6 +143,10 @@ function triggerPerformanceHint(force = false) {
     const hintText = document.getElementById('hint-text');
     if (hint) {
         if (hintText) hintText.textContent = tr('perfLagMsg');
+        
+        // Double check warmup before showing (redundant safety)
+        if (!force && warmupFrames < 600) return;
+
         hint.classList.add('visible');
         if (!force) perfHintShown = true;
         
@@ -785,21 +790,24 @@ function updateAudioEffects() {
 function startVisualizer() { 
     if (!visualizerEnabled || !isPlaying) return; 
     
-    if (!audioContext) {
+    // re-init if closed or missing
+    if (!audioContext || audioContext.state === 'closed') {
         setupVisualizer();
-        if (!audioContext) return; // Failed to setup
+        if (!audioContext) return; 
     }
 
     // Force resize to ensure canvas has dimensions
     if (visualizerContainer && visualizerCanvas) {
-        visualizerCanvas.width = visualizerContainer.clientWidth;
-        visualizerCanvas.height = visualizerContainer.clientHeight;
+        if (visualizerContainer.clientWidth > 0 && visualizerContainer.clientHeight > 0) {
+            visualizerCanvas.width = visualizerContainer.clientWidth;
+            visualizerCanvas.height = visualizerContainer.clientHeight;
+        }
     }
 
     if (visualizerRunning) return;
 
     if (audioContext.state === 'suspended') {
-        audioContext.resume().finally(() => {
+        audioContext.resume().catch(e => console.error("Resume failed", e)).finally(() => {
             if (!visualizerRunning && isPlaying) {
                 visualizerRunning = true;
                 drawVisualizer();
@@ -939,6 +947,7 @@ function applySnuggleTime(enabled) {
         if (animationSelect) animationSelect.value = 'xmas';
         updateEmoji('loving_dinos');
         if (emojiSelect) emojiSelect.value = 'loving_dinos';
+        if (customEmojiContainer) customEmojiContainer.style.display = 'none';
 
         if (accentToggle) {
             accentToggle.checked = false;
@@ -957,6 +966,7 @@ function applySnuggleTime(enabled) {
         const et = settings.coverEmoji || 'note';
         updateEmoji(et, settings.customCoverEmoji);
         if (emojiSelect) emojiSelect.value = et;
+        if (customEmojiContainer) customEmojiContainer.style.display = et === 'custom' ? 'flex' : 'none';
 
         if (accentToggle) {
             accentToggle.disabled = false;
@@ -1010,6 +1020,7 @@ async function loadSettings() {
         // App always starts in normal mode to avoid startup bugs
         toggleMiniMode.checked = false;
         document.body.classList.remove('is-mini');
+        window.api.setWindowSize(1300, 900); // Force window reset
     }
     currentVolume = settings.volume !== undefined ? settings.volume : 0.2; audio.volume = currentVolume; shuffleOn = settings.shuffle || false; loopMode = settings.loop || 'off'; currentLanguage = settings.language || 'de'; sortMode = settings.sortMode || 'name';
     if (downloadFolderInput) downloadFolderInput.value = settings.downloadFolder || '';
@@ -1394,8 +1405,16 @@ function setupEventListeners() {
     window.addEventListener('keyup', (e) => {
         pressedKeys.delete(e.key.toLowerCase());
     });
+    
+    // Clear keys on blur to prevent stuck keys
+    window.addEventListener('blur', () => {
+        pressedKeys.clear();
+    });
+
     bind(toggleMiniMode, 'change', (e) => { 
         const isMini = e.target.checked;
+        settings.miniMode = isMini;
+        window.api.setSetting('miniMode', isMini);
         if (isMini) {
             document.body.classList.add('is-mini');
             window.api.setWindowSize(340, 600); 
@@ -1408,6 +1427,9 @@ function setupEventListeners() {
         if (currentAnim === 'xmas') {
             applyAnimationSetting('xmas');
         }
+        
+        // Recalculate title scroll for new layout
+        setTimeout(updateTrackTitleScroll, 300); // Small delay for transition
     });
     bind(downloadBtn, 'click', handleDownload);
     window.api.onMediaControl((a) => { if (a === 'play-pause') { if (isPlaying) audio.pause(); else audio.play(); } else if (a === 'next') playNext(); else if (a === 'previous') playPrev(); });
@@ -1489,7 +1511,12 @@ function setupEventListeners() {
     bind(settingsCloseBtn, 'click', () => { settingsOverlay.classList.remove('visible'); });
     bind(changeFolderBtn, 'click', async () => { const nf = await window.api.selectFolder(); if (nf) { if (downloadFolderInput) downloadFolderInput.value = nf; window.api.setSetting('downloadFolder', nf); } });
     bind(qualitySelect, 'change', (e) => window.api.setSetting('audioQuality', e.target.value));
-    bind(visualizerToggle, 'change', (e) => { visualizerEnabled = e.target.checked; window.api.setSetting('visualizerEnabled', visualizerEnabled); if (visualizerEnabled) startVisualizer(); else stopVisualizer(); });
+    bind(visualizerToggle, 'change', (e) => { 
+        visualizerEnabled = e.target.checked; 
+        settings.visualizerEnabled = visualizerEnabled;
+        window.api.setSetting('visualizerEnabled', visualizerEnabled); 
+        if (visualizerEnabled) startVisualizer(); else stopVisualizer(); 
+    });
     bind(visualizerStyleSelect, 'change', (e) => { currentVisualizerStyle = e.target.value; window.api.setSetting('visualizerStyle', currentVisualizerStyle); });
     bind(visualizerSensitivity, 'input', (e) => { visSensitivity = parseFloat(e.target.value); updateAnalyserSettings(); window.api.setSetting('visSensitivity', visSensitivity); });
     bind($('#visualizer-sensitivity-reset-btn'), 'click', () => {
@@ -1706,7 +1733,12 @@ function setupEventListeners() {
             window.api.setSetting('customCoverEmoji', v);
             updateEmoji('custom', v);
         });
-    bind(toggleDeleteSongs, 'change', (e) => { deleteSongsEnabled = e.target.checked; window.api.setSetting('deleteSongsEnabled', deleteSongsEnabled); renderPlaylist(); });
+    bind(toggleDeleteSongs, 'change', (e) => { 
+        deleteSongsEnabled = e.target.checked; 
+        settings.deleteSongsEnabled = deleteSongsEnabled;
+        window.api.setSetting('deleteSongsEnabled', deleteSongsEnabled); 
+        renderPlaylist(); 
+    });
     bind(playlistEl, 'click', (e) => { 
         const db = e.target.closest('.delete-track-btn'); 
         if (db) { e.stopPropagation(); handleDeleteTrack(db.dataset.path); return; } 
@@ -1987,7 +2019,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    setupAudioEvents(); setupEventListeners(); setupVisualizer();
+    setupAudioEvents(); setupEventListeners();
 
     const hideSplash = () => {
         const splash = $('#splash-screen');

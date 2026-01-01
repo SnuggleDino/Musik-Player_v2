@@ -2236,6 +2236,91 @@ body.is-mini .music-emoji { font-size: 60px !important; }
 
 body.is-mini .track-info-area { 
     margin-top: 5px !important;
+    width: 100% !important;
+    padding: 0 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    flex-shrink: 0 !important;
+}
+
+body.is-mini .track-title-large {
+    font-size: 1.1rem !important;
+    white-space: nowrap !important;
+    text-overflow: clip !important; 
+    display: block !important; /* Block behaves better for width constraints here */
+    margin: 0 !important;
+    padding: 0 !important; /* Remove padding to maximize text space */
+    width: auto !important;
+    max-width: 100% !important;
+    text-align: center !important; /* Center text within itself */
+}
+
+body.is-mini .title-scroll-wrapper.scroll-active .track-title-large {
+    text-align: left !important; /* Align left when scrolling */
+}
+
+body.is-mini .title-scroll-wrapper {
+    display: flex !important;
+    justify-content: center !important; /* Default to center for short text */
+    width: 240px !important;
+    min-width: 240px !important;
+    max-width: 240px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+body.is-mini .title-scroll-wrapper.scroll-active {
+    justify-content: flex-start !important; /* Switch to left for scrolling text */
+}
+
+body.is-mini .track-title-flex-box {
+    width: 100%;
+    justify-content: center;
+    gap: 5px !important;
+    flex-wrap: nowrap !important;
+    max-width: 100% !important; /* Ensure parent doesn't grow */
+    overflow: hidden !important; /* Safety clip */
+}
+
+body.is-mini .track-artist-large {
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 240px !important; /* Match title width */
+    margin-top: 2px !important;
+}
+
+body.is-mini .visualizer-container {
+    display: block !important;
+    height: 50px !important; /* Slightly smaller for better fit */
+    width: 100% !important;
+    margin: 5px 0 !important;
+    flex-shrink: 0 !important;
+}
+
+body.is-mini .controls-area {
+    margin-top: 5px !important;
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 15px !important;
+    padding: 0 !important;
+    flex-wrap: nowrap !important;
+}
+
+body.is-mini .volume-control-area {
+    margin-top: 10px !important;
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+}
+
+body.is-mini .volume-row {
+    width: 80% !important;
 }
 
 /* =========================================
@@ -2291,21 +2376,21 @@ kbd {
 }
 
 body.is-mini .control-btn {
-    width: 38px !important;
-    height: 38px !important;
+    width: 42px !important;
+    height: 42px !important;
 }
 
 body.is-mini .control-main {
-    width: 56px !important;
-    height: 56px !important;
+    width: 60px !important;
+    height: 60px !important;
 }
 
 body.is-mini .control-main svg {
-    width: 24px !important;
-    height: 24px !important;
+    width: 28px !important;
+    height: 28px !important;
 }
 
 body.is-mini .control-btn svg {
-    width: 18px !important;
-    height: 18px !important;
+    width: 20px !important;
+    height: 20px !important;
 }
